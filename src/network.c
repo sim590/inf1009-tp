@@ -6,3 +6,8 @@
 //-------------------------------------------------------
 
 #include <network.h>
+
+int main(argc,argv**)
+{
+    exit(EXIT_SUCCESS);
+}

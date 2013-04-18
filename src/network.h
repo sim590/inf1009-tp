@@ -38,7 +38,7 @@ typedef enum {
 // d'établissement de connexion
 //----------------------------------
 typedef struct _CONNECTION_PACKET {
-    unsigned int type;
+    short int packet_type;
     CONNECTION_PACKET_TYPE con_type; // {CALL,CONTD,REL} 
     char con_number;
     char source_addr; // adresses [0,249]
@@ -67,7 +67,7 @@ typedef struct _CONNECTION_PACKET {
 *           p(s)=100
 */
 typedef struct _DATA_PACKET {
-    unsigned int type;
+    short int packet_type;
     char con_number;
     char type; 
     char segm_data[128];
@@ -78,9 +78,9 @@ typedef struct _DATA_PACKET {
 // de libération
 //--------------------------
 typedef struct _RELEASE_PACKET {
-    unsigned int type;
+    short int packet_type;
     char con_number;
-    char type=0x13;
+    char type;
     char source_addr;
     char dest_addr;
 } RELEASE_PACKET;
@@ -89,10 +89,10 @@ typedef struct _RELEASE_PACKET {
 // Network Protocol Data Unit
 //----------------------------
 typedef union {
-    unsigned int type;
+    short int packet_type;
     CONNECTION_PACKET con_packet;
     DATA_PACKET data_packet;
     RELEASE_PACKET rel_packet;
-} NPDU;
-
+} PACKET;
 #endif /* end of include guard: NETWORK_UNQBN59Z */
+

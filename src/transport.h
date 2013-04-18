@@ -8,9 +8,14 @@
 #ifndef TRANSPORT_4R0LNUHE
 
 #define TRANSPORT_4R0LNUHE
+#define S_LEC "./S_LEC"
+#define S_ECR "./S_ECR"
 
 #include <transNnet.h>
+#include <stdio.h>
+#include <unistd.h>
 
 
+char* sendTransactionLowerLayer();
 
 #endif /* end of include guard: TRANSPORT_4R0LNUHE */
