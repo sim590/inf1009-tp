@@ -7,8 +7,25 @@
 # session.
 #--------------------------------------------------
 
+SRCDIR=./src
+BINDIR=./bin
+
+all: main transport network
+main: $(SRCDIR)/main.c
+	cd $(SRCDIR)/; \
+	gcc -o ../$(BINDIR)/inf1009-tp main.c -I.
+
+transport: $(SRCDIR)/transport.c
+	cd $(SRCDIR)/; \
+	gcc -o ../$(BINDIR)/transport-entity transport.c -I.
+
+network: $(SRCDIR)/network.c
+	cd $(SRCDIR)/; \
+	gcc -o ../$(BINDIR)/network-entity network.c -I.
+
 clean:
-	cd src; rm -f *.o; cd ..
-clean all: clean
-	rm inf1009-tp
+	rm -f $(SRCDIR)/*.o
+
+cleanall: clean
+	rm -f $(BINDIR)/inf1009-tp $(BINDIR)/transport-entity $(BINDIR)/network-entity
 

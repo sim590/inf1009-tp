@@ -12,7 +12,6 @@
 
 #include <network.h>
 #include <transport.h>
-#include <pthread.h>
 
 //-------------------------
 // Primitives lors de la
