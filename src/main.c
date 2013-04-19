@@ -29,8 +29,6 @@ int main()
         return -1;
     }
     else if (pid == 0) {
-        if (DEBUG) printf("CHILD1: what's up!\n");
-        
         // Fermeture des côté du tuyaux non-utiles
         close(transToNet_pipe[0]);
         close(netToTrans_pipe[1]);
@@ -44,6 +42,7 @@ int main()
 
         // Exécute le processus entité transport
         execv(TRANS_PATH,argv);
+        exit(EXIT_FAILURE); // Acessible que si exec fail
     }
 
     pid = fork();
@@ -54,30 +53,25 @@ int main()
         return -1;
     }
     else if (pid == 0) {
-        if (DEBUG) printf("CHILD2: what's up dude!\n");
-
         // Fermeture des côté du tuyaux non-utiles
-        //close(netToTrans_pipe[0]);
-        //close(transToNet_pipe[1]);
+        close(netToTrans_pipe[0]);
+        close(transToNet_pipe[1]);
         // Préparation des arguments pour le processus
         // entité réseau
-        //argv = makeArgArray(4,NET_PATH_LENGTH);
-        //strcpy(argv[0],NET_PATH);
-        //sprintf(argv[1],"%i",netToTrans_pipe[1]);
-        //sprintf(argv[2],"%i",transToNet_pipe[0]);
-        //for (i = 0; i < 2; i++) sprintf(argv[i+2],"%i",transToNet_pipe[(i+2)%2]);
-        //for (i = 0; i < 2; i++) sprintf(argv[i+4],"%i",netToTrans_pipe[(i+2)%2]);
+        argv = makeArgArray(4,NET_PATH_LENGTH);
+        strcpy(argv[0],NET_PATH);
+        sprintf(argv[1],"%i",netToTrans_pipe[1]);
+        sprintf(argv[2],"%i",transToNet_pipe[0]);
 
-        //// Exécute le processus entité réseau
-        //execv(TRANS_PATH,argv);
-        exit(EXIT_SUCCESS);
+        // Exécute le processus entité réseau
+        execv(NET_PATH,argv);
+        exit(EXIT_FAILURE); // Acessible que si exec fail
     }
 
     // On ferme les file descriptors qui ne nous sont pas utiles
     for (i = 0; i < 2; i++) close(transToNet_pipe[i%2]);
     for (i = 0; i < 2; i++) close(netToTrans_pipe[i%2]);
     
-    sleep(2);
     return 0;    
 }
 

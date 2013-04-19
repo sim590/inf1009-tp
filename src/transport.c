@@ -11,6 +11,7 @@ int transToNet_pipe,netToTrans_pipe;
 Connection* first_con_node = NULL;
 Connection* last_con_node = NULL;
 
+// Point d'entrée dans le programme
 int main(int argc,char** argv)
 {
     FILE* transaction_file = fopen(S_LEC,"r");
@@ -18,36 +19,222 @@ int main(int argc,char** argv)
         fprintf(stderr,"Impossible d'ouvrir le fichier S_LEC\n");
         return -1;
     }
-    char line_buffer[256];
+    char line_buffer[256], message[256];
     int i;
+    Connection* connection;
+    PRIM_PACKET p;
 
     // Récupération des références au tuyaux
     // (respectivement l'écriture et l'écoute)
-    //transToNet_pipe = atoi(argv[1]); netToTrans_pipe = atoi(argv[2]);
+    transToNet_pipe = atoi(argv[1]); netToTrans_pipe = atoi(argv[2]);
     
-    // Lecture du fichier S_LEC
-    while(fgets(line_buffer, 256, transaction_file));
+    // Lecture du fichier S_LEC et envoie des requêtes et écoute
+    // de la réponse.
+    
+    //ALGO
+    //--------
+    //TANT QUE FICHIER_NON_VIDE
+        //LIRE S_LEC
+        
+        //REGARDER_TABLE_DE_CONNEXIONS
+        
+        //SI CONNEXION_EXISTE_PAS
+            //ENVOYER_CONNECTION_REQ
+            //ECOUTER_REPONSE
+            
+            //SI REPONSE_POSITIVE
+                //CHANGER_ETAT_CONNEXION_TABLE_CONNEXION
+                //ENVOYER_DATA_REQ
+            //SINON
+                //SUPPRIMER_CONNEXION
+            //FIN SI
+        //SINON
+            //ENVOYER_DATA_REQ
+        //FIN SI
+    //FIN TANT QUE
+    
+    //POUR TOUS LES CONNEXION
+        //SUPPRIMMER_CONNEXION
+    
+    while(fgets(line_buffer, 256, transaction_file))
     {
-       // 1. LIRE FICHIER
-       // 2. ENVOYER DEMANDE À LA COUCHE RÉSEAU
-       //   - CONNECTION.REQ
-       //   - DATA.REQ
-       //   - REL.REQ
-       // 3. ÉCOUTER LA RÉPONSE DE LA COUCHE RÉSEAU
-       //   - LIRE TUYAU
-       //   - SI RÉPONSE
-       //       TRAITER LA RÉPONSE
-       //     SINON
-       //       RETOURNER À 1. ET REVENIR POUR UNE AUTRE LECTURE
+        connection = (Connection*) findConnection(line_buffer[0]);
+        
+        // La connexion n'existe pas
+        if (!connection/*==NULL*/) {
+            
+            // Engager une connexion
+            connection = (Connection*) add_connection(line_buffer[0]);
+
+            // Créaction d'un paquet contenant la primitive N_CONNECT_req
+            p.type = 0; // CON_PRIM_PACKET
+            p.con_prim_packet.prim = N_CONNECT_req;
+            
+            // Envoie d'un paquet et écoute de la réponse de ER
+            if(sendPacketToNet(connection,&p) == -1 || getPacketFromNet(&p) == -1)
+                return -1;
+            
+            // Action en conséquence
+            switch(p.type)
+            {
+                // CONNECTION_PACKET reçu => N_CONNECT_conf
+                case 0:
+                    // Confirmation de la connexion
+                    connection->state[1] = 0x01;
+
+                    // Construction du paquet de DATA
+                    p.type = 1;
+                    p.data_prim_packet.prim = N_DATA_req;
+                    getMessageFromBuffer(line_buffer,message);
+                    strcpy(p.data_prim_packet.transaction,message);
+                    
+                    // Envoie du paquet à l'ER
+                    if(sendPacketToNet(connection,&p) == -1)
+                        return -1;
+                    break;
+                // wtf?
+                case 1:
+                    break;
+                // REL_PRIM_PACKET reçu => N_DISCONNECT_ind
+                case 2:
+                    remove_connection(connection->state[0]);
+                    break;
+            }
+        }
+        else {
+            // Construction du paquet de DATA
+            p.type = 1;
+            p.data_prim_packet.prim = N_DATA_req;
+            getMessageFromBuffer(line_buffer,message);
+            strcpy(p.data_prim_packet.transaction,message);
+            
+            // Envoyer N_DATA.req
+            if(sendPacketToNet(connection,&p) == -1)
+                return -1;
+        }
     }
+
+    // Vider la table de connexions
+    deleteAllConnections();
+    
     return 0;
+}
+
+//------------------------------
+// Vide la liste de connexions
+//------------------------------
+void deleteAllConnections()
+{
+    Connection* node = first_con_node, *prev_node = first_con_node;
+    
+    while (node != NULL) {
+        node = node->next;
+        free(prev_node);
+        prev_node = node;
+    }
+}
+//-----------------------------------
+// Écoute la réponse de l'ER
+// -1: erreur..
+// redFromPipe: Nombre de caractères
+// lus du pipe
+//-----------------------------------
+int getPacketFromNet(PRIM_PACKET* p)
+{
+    int redFromPipe, count = 0;
+    // Réponse de l'ER
+    do
+    {
+        redFromPipe = read(netToTrans_pipe,&p,sizeof(PRIM_PACKET));
+        if (!count && count < 4) {
+            sleep(0.5);
+        }
+        else if (count++ > 3) {
+            fprintf(stderr, "Erreur: Aucune réponse du fournisseur réseau pour une N_CONNECT.REQ après 2 secondes..\n");
+            return -1;
+        }
+    }
+    while (redFromPipe < 1/*On s'assure qu'on reçoit un PRIM_PACKET???*/); 
+   
+   return redFromPipe;
+}
+
+//---------------------------------------
+// Envoie du data à l'ER.
+// Retourne:
+// -1: erreur..
+// writtenToPipe: Nombre de caractères
+// écrits dans le pipe
+//---------------------------------------
+int sendPacketToNet(Connection* connection, PRIM_PACKET* p)
+{
+    int writtenToPipe, count=0;
+    
+    // Envoie du N_DATA.req
+    do
+    {
+        writtenToPipe = write(transToNet_pipe,&p,sizeof(PRIM_PACKET));
+    
+        if (!count && count < 4) {
+            sleep(0.5);
+        }
+        else if (count++ > 3) {
+            fprintf(stderr, "Erreur: Impossible d'écrire dans le pipe après 4 essaies.\n");
+            return -1;
+        }
+    }
+    while (writtenToPipe < 1);
+    
+    return writtenToPipe;
+}
+
+//--------------------------------------
+// Trouver le pointeur vers le premier
+// caractère du message
+// Retourne:
+// -1: aucun message..
+// j: Le nombre de caractères dans le message
+//--------------------------------------
+int getMessageFromBuffer(char buffer[], char message[])
+{
+    int i=0,j;
+
+    // On trouve l'indice auquel se trouve
+    while (i < 255 || buffer[i++] != '\\') {
+    }
+
+    if (!i<255) {
+        return -1;
+    }
+
+    for (j = 0; j < 255 - i; j++) {
+        message[j] = buffer[i+j+1];
+    }
+
+    return j;
+}
+
+//-----------------------------------------------
+// Indique si la connexion est existante ou non
+//-----------------------------------------------
+Connection* findConnection(char con_number)
+{
+    Connection* node = first_con_node;
+    
+    while (node != NULL) {
+        if (node->state[0] == con_number) {
+            return node;
+        }
+    }
+
+    return NULL;
 }
 
 //---------------------------------------
 // Ajout d'un noeud de connexion à la
 // liste chaînée de connexions
 //---------------------------------------
-void add_connection(char con_number)
+Connection* add_connection(char con_number)
 {
     Connection* node = malloc(sizeof(Connection));
     node->state[0] = con_number;
@@ -62,6 +249,8 @@ void add_connection(char con_number)
 
     last_con_node->next = node;
     last_con_node = node;
+
+    return node;
 }
 
 //--------------------------------
@@ -119,10 +308,13 @@ int whatsConState(char con_number)
 
     while (node!=NULL) {
          if (node->state[0] == con_number) {
-            return node->state[0] - '0'; // 0x00 ou 0x01
+            return node->state[0]; // 0x00 ou 0x01
          }
     }
 
     return -1;
 }
+
+
+
 

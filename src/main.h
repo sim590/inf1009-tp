@@ -15,7 +15,6 @@
 #define NET_PATH_LENGTH 16
 #define DEBUG 1
 
-#include <transNnet.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>

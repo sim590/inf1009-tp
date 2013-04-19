@@ -12,9 +12,6 @@
 #define S_ECR "./S_ECR"
 
 #include <transNnet.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <unistd.h>
 
 typedef struct _connection {
     struct _connection* next;
@@ -26,6 +23,13 @@ typedef struct _connection {
 Connection* first_con_node;
 Connection* last_con_node;
 
+void deleteAllConnections();
+int sendPacketToNet(Connection*, PRIM_PACKET*);
+int getMessageFromBuffer(char buffer[],char*);
+int getPacketFromNet(PRIM_PACKET*);
+Connection* findConnection(char);
+Connection* add_connection(char);
+void remove_connection(char);
 int whatsConState(char);
 
 #endif /* end of include guard: TRANSPORT_4R0LNUHE */
