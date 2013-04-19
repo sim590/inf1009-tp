@@ -12,7 +12,6 @@
 
 #include <transNnet.h>
 
-
 // Type de paquet lors de la phase
 // de connexion
     /* appel = 00001011
