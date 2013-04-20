@@ -14,7 +14,14 @@ int main(int argc, char** argv)
 {
     netToTrans_pipe = atoi(argv[1]); transToNet_pipe = atoi(argv[2]);
     PRIM_PACKET p;
-    int i=0, count = 0;
+    int i=0, count = 0, flags;
+
+    // On s'assure que les fd sont en mode 0_NONBLOCK
+    flags = fcntl(transToNet_pipe,F_GETFL,0);
+    fcntl(transToNet_pipe,F_SETFL, flags | O_NONBLOCK);
+    flags = fcntl(netToTrans_pipe,F_GETFL,0);
+    fcntl(netToTrans_pipe,F_SETFL, flags | O_NONBLOCK);
+
 
     if (DEBUG)
     {
@@ -22,7 +29,7 @@ int main(int argc, char** argv)
         while (count++ < 4) {
             if(read(transToNet_pipe,&p,sizeof(PRIM_PACKET)) > 0)
             {
-                printf("%d\n",p.con_prim_packet.type);
+                printf("%d\n",p.con_prim_packet.prim);
                 return 0;
             }
             sleep(1);

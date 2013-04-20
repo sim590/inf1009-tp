@@ -10,12 +10,13 @@
 
 #define TRANSNNET_MDHCQJ5S
 
-#define DEBUG 1
+#define DEBUG 0
 
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
 #include <string.h>
+#include <fcntl.h>
 
 //-------------------------
 // Primitives lors de la
@@ -54,20 +55,20 @@ typedef enum {
 // transport et réseau
 //-------------------------------------------
 typedef struct _CON_PRIM_PACKET {
-    short int type;
+    int type;
     CONNECTION_PRIMITIVE prim;
     char src_addr;
     char dest_addr;
 } CON_PRIM_PACKET;
 
 typedef struct _DATA_PRIM_PACKET {
-    short int type;
+    int type;
     DATA_PRIMITIVE prim;
     char transaction[256];
 } DATA_PRIM_PACKET;
 
 typedef struct _REL_PRIM_PACKET {
-    short int type;
+    int type;
     REL_PRIMITIVE prim;
     char dest_addr;
     char reason[32];
@@ -78,7 +79,7 @@ typedef struct _REL_PRIM_PACKET {
 // transport-réseau
 //----------------------------
 typedef union {
-    short int type;
+    int type;
     CON_PRIM_PACKET con_prim_packet;// type = 0
     DATA_PRIM_PACKET data_prim_packet;// type = 1
     REL_PRIM_PACKET rel_prim_packet; // type = 2

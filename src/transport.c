@@ -20,7 +20,7 @@ int main(int argc,char** argv)
         return -1;
     }
     char line_buffer[256], message[256];
-    int i;
+    int i, flags;
     Connection* connection;
     PRIM_PACKET p;
 
@@ -28,6 +28,12 @@ int main(int argc,char** argv)
     // (respectivement l'écriture et l'écoute)
     transToNet_pipe = atoi(argv[1]); netToTrans_pipe = atoi(argv[2]);
     
+    // On s'assure que les file descriptors sont en mode 0_NONBLOCK
+    flags = fcntl(transToNet_pipe,F_GETFL,0);
+    fcntl(transToNet_pipe,F_SETFL, flags | O_NONBLOCK);
+    flags = fcntl(netToTrans_pipe,F_GETFL,0);
+    fcntl(netToTrans_pipe,F_SETFL, flags | O_NONBLOCK);
+
     if (DEBUG) printf("TRANSPORT\nMes fd sont:\n%i,%i\n",netToTrans_pipe,transToNet_pipe);
     // Lecture du fichier S_LEC et envoie des requêtes et écoute
     // de la réponse.
@@ -146,14 +152,15 @@ int getPacketFromNet(PRIM_PACKET* p)
     // Réponse de l'ER
     do
     {
-        redFromPipe = read(netToTrans_pipe,&p,sizeof(PRIM_PACKET));
-        if (!count && count < 4) {
-            sleep(0.5);
+        redFromPipe = read(netToTrans_pipe,p,sizeof(PRIM_PACKET));
+        if (count && count < 4) {
+            sleep(1);
         }
-        else if (count++ > 3) {
-            fprintf(stderr, "Erreur: Aucune réponse du fournisseur réseau pour une N_CONNECT.REQ après 2 secondes..\n");
+        else if (count > 3) {
+            fprintf(stderr, "Erreur: Aucune réponse du fournisseur réseau pour une N_CONNECT.REQ après 4 secondes..\n");
             return -1;
         }
+        count++;
     }
     while (redFromPipe < 1/*On s'assure qu'on reçoit un PRIM_PACKET???*/); 
    
@@ -174,15 +181,16 @@ int sendPacketToNet(Connection* connection, PRIM_PACKET* p)
     // Envoie du N_DATA.req
     do
     {
-        writtenToPipe = write(transToNet_pipe,&p,sizeof(PRIM_PACKET));
+        writtenToPipe = write(transToNet_pipe,p,sizeof(PRIM_PACKET));
     
-        if (!count && count < 4) {
-            sleep(0.5);
+        if (count && count < 4) {
+            sleep(1);
         }
-        else if (count++ > 3) {
-            fprintf(stderr, "Erreur: Impossible d'écrire dans le pipe après 4 essaies.\n");
+        else if (count > 3) {
+            fprintf(stderr, "Erreur: Impossible d'écrire dans le pipe après 4 secondes.\n");
             return -1;
         }
+        count++;
     }
     while (writtenToPipe < 1);
     
