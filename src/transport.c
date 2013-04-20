@@ -15,6 +15,8 @@ Connection* last_con_node = NULL;
 int main(int argc,char** argv)
 {
     FILE* transaction_file = fopen(S_LEC,"r");
+    FILE* results_file = fopen(S_ECR,"w");
+
     if (transaction_file == NULL) {
         fprintf(stderr,"Impossible d'ouvrir le fichier S_LEC\n");
         return -1;
@@ -35,8 +37,6 @@ int main(int argc,char** argv)
     fcntl(netToTrans_pipe,F_SETFL, flags | O_NONBLOCK);
 
     if (DEBUG) printf("TRANSPORT\nMes fd sont:\n%i,%i\n",netToTrans_pipe,transToNet_pipe);
-    // Lecture du fichier S_LEC et envoie des requêtes et écoute
-    // de la réponse.
     
     //ALGO
     //--------
@@ -63,6 +63,8 @@ int main(int argc,char** argv)
     //POUR TOUS LES CONNEXION
         //SUPPRIMMER_CONNEXION
     
+    // Lecture du fichier S_LEC, envoie des requêtes et écoute
+    // de la réponse.
     while(fgets(line_buffer, 256, transaction_file))
     {
         connection = (Connection*) findConnection(line_buffer[0]);
@@ -76,16 +78,22 @@ int main(int argc,char** argv)
             // Créaction d'un paquet contenant la primitive N_CONNECT_req
             p.type = 0; // CON_PRIM_PACKET
             p.con_prim_packet.prim = N_CONNECT_req;
+            p.con_prim_packet.src_addr = (char) rand();  // Adresses aléatoires pour la source
+            p.con_prim_packet.dest_addr = (char) rand(); // et la destination..
             
             // Envoie d'un paquet et écoute de la réponse de ER
-            if(sendPacketToNet(connection,&p) == -1 || getPacketFromNet(&p) == -1)
+            if(sendPacketToInterface(&p,transToNet_pipe) == -1 || getPacketFromInterface(&p,netToTrans_pipe) == -1)
                 return -1;
             
+            char result[256];
             // Action en conséquence
             switch(p.type)
             {
-                // CONNECTION_PACKET reçu => N_CONNECT_conf
+                // CON_PRIM_PACKET reçu => N_CONNECT_conf
                 case 0:
+                    // Écriture des résutlats dans S_ECR
+                    strcpy(result,"Réception de la primitive N_CONNECT.conf");
+                    fwrite(result,1,sizeof(result),results_file);
                     // Confirmation de la connexion
                     connection->state[1] = 0x01;
 
@@ -94,9 +102,10 @@ int main(int argc,char** argv)
                     p.data_prim_packet.prim = N_DATA_req;
                     getMessageFromBuffer(line_buffer,message);
                     strcpy(p.data_prim_packet.transaction,message);
+                    p.data_prim_packet.con_number = connection->state[0];
                     
                     // Envoie du paquet à l'ER
-                    if(sendPacketToNet(connection,&p) == -1)
+                    if(sendPacketToInterface(&p,transToNet_pipe) == -1)
                         return -1;
                     break;
                 // wtf?
@@ -105,6 +114,9 @@ int main(int argc,char** argv)
                 // REL_PRIM_PACKET reçu => N_DISCONNECT_ind
                 case 2:
                     remove_connection(connection->state[0]);
+                    // Écriture des résultats dans S_ECR
+                    strcpy(result,"Réception de la primitive N_DISCONNECT.ind");
+                    fwrite(result,1,sizeof(result),results_file);
                     break;
             }
         }
@@ -114,88 +126,35 @@ int main(int argc,char** argv)
             p.data_prim_packet.prim = N_DATA_req;
             getMessageFromBuffer(line_buffer,message);
             strcpy(p.data_prim_packet.transaction,message);
+            p.data_prim_packet.con_number = connection->state[0];
             
             // Envoyer N_DATA.req
-            if(sendPacketToNet(connection,&p) == -1)
+            if(sendPacketToInterface(&p,transToNet_pipe) == -1)
                 return -1;
         }
     }
 
-    // Vider la table de connexions
+    // Construction d'un paquet REL_PRIM_PACKET
+    // et vidage de la table de connexions
+    p.type = 1;
+    p.rel_prim_packet.prim = REL_ind;
+    strcpy(p.rel_prim_packet.reason,"Fin des requêtes..");
+    connection = first_con_node;
+    while (connection) {
+        p.rel_prim_packet.con_number = connection->state[0];
+        if(sendPacketToInterface(&p,transToNet_pipe) == -1)
+            return -1;
+    }
+
     deleteAllConnections();
+
+    // Fermeture des fichiers S_ECR, S_LEC
+    fclose(transaction_file);
+    fclose(results_file);
     
     return 0;
 }
 
-//------------------------------
-// Vide la liste de connexions
-//------------------------------
-void deleteAllConnections()
-{
-    Connection* node = first_con_node, *prev_node = first_con_node;
-    
-    while (node != NULL) {
-        node = node->next;
-        free(prev_node);
-        prev_node = node;
-    }
-}
-//-----------------------------------
-// Écoute la réponse de l'ER
-// -1: erreur..
-// redFromPipe: Nombre de caractères
-// lus du pipe
-//-----------------------------------
-int getPacketFromNet(PRIM_PACKET* p)
-{
-    int redFromPipe, count = 0;
-    // Réponse de l'ER
-    do
-    {
-        redFromPipe = read(netToTrans_pipe,p,sizeof(PRIM_PACKET));
-        if (count && count < 4) {
-            sleep(1);
-        }
-        else if (count > 3) {
-            fprintf(stderr, "Erreur: Aucune réponse du fournisseur réseau pour une N_CONNECT.REQ après 4 secondes..\n");
-            return -1;
-        }
-        count++;
-    }
-    while (redFromPipe < 1/*On s'assure qu'on reçoit un PRIM_PACKET???*/); 
-   
-   return redFromPipe;
-}
-
-//---------------------------------------
-// Envoie du data à l'ER.
-// Retourne:
-// -1: erreur..
-// writtenToPipe: Nombre de caractères
-// écrits dans le pipe
-//---------------------------------------
-int sendPacketToNet(Connection* connection, PRIM_PACKET* p)
-{
-    int writtenToPipe, count=0;
-    
-    // Envoie du N_DATA.req
-    do
-    {
-        writtenToPipe = write(transToNet_pipe,p,sizeof(PRIM_PACKET));
-    
-        if (count && count < 4) {
-            sleep(1);
-        }
-        else if (count > 3) {
-            fprintf(stderr, "Erreur: Impossible d'écrire dans le pipe après 4 secondes.\n");
-            return -1;
-        }
-        count++;
-    }
-    while (writtenToPipe < 1);
-    
-    return writtenToPipe;
-}
 
 //--------------------------------------
 // Trouver le pointeur vers le premier
@@ -209,7 +168,7 @@ int getMessageFromBuffer(char buffer[], char message[])
     int i=0,j;
 
     // On trouve l'indice auquel se trouve
-    while (i < 255 || buffer[i++] != '\\') {
+    while (i++ < 255 || buffer[i-1] != '\\') {
     }
 
     if (!i<255) {
@@ -222,108 +181,4 @@ int getMessageFromBuffer(char buffer[], char message[])
 
     return j;
 }
-
-//-----------------------------------------------
-// Indique si la connexion est existante ou non
-//-----------------------------------------------
-Connection* findConnection(char con_number)
-{
-    Connection* node = first_con_node;
-    
-    while (node != NULL) {
-        if (node->state[0] == con_number) {
-            return node;
-        }
-    }
-
-    return NULL;
-}
-
-//---------------------------------------
-// Ajout d'un noeud de connexion à la
-// liste chaînée de connexions
-//---------------------------------------
-Connection* add_connection(char con_number)
-{
-    Connection* node = malloc(sizeof(Connection));
-    node->state[0] = con_number;
-    node->state[1] = 0x00;
-    node->next = NULL;
-
-    // Si la liste est vide
-    if (first_con_node == last_con_node && first_con_node == NULL) {
-        first_con_node = last_con_node = node;
-        return;
-    }
-
-    last_con_node->next = node;
-    last_con_node = node;
-
-    return node;
-}
-
-//--------------------------------
-// Suppression d'un noeud de
-// la liste chaînée de connexions
-//--------------------------------
-void remove_connection(char con_number)
-{
-    Connection* node = first_con_node, *prev_node = node;
-
-    while (node != NULL) {
-        if (node->state[0] == con_number) {
-            // Le seul élément de la liste
-            if (node == first_con_node && node == last_con_node) {
-                free(node);
-                first_con_node = last_con_node = NULL;
-                return;
-            }
-            // Le premier, mais pas le dernier
-            else if (node == first_con_node) {
-                first_con_node = node->next;
-                free(node);
-                return;
-            }
-            // Le dernier, mais pas le premier
-            else if (node == last_con_node) {
-                last_con_node = prev_node;
-                prev_node->next = NULL;
-                free(node);
-                return;
-            }
-            // Pas le premier ni le dernier
-            else {
-                prev_node->next = node->next;
-                free(node);
-                return;
-            }
-        }
-        // On avance
-        if (node != first_con_node)
-            prev_node = node;
-        node = node->next;
-    }
-}
-
-//-----------------------------------
-// Indique l'état de la connexion:
-// 0: Non-connecté
-// 1: Connecté
-// -1: Non-existante
-//-----------------------------------
-int whatsConState(char con_number)
-{
-    Connection* node = first_con_node;
-
-    while (node!=NULL) {
-         if (node->state[0] == con_number) {
-            return node->state[0]; // 0x00 ou 0x01
-         }
-    }
-
-    return -1;
-}
-
-
-
 

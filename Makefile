@@ -19,23 +19,27 @@ main.o: $(SRCDIR)/main.c $(SRCDIR)/main.h
 	cd $(SRCDIR)/; \
 	gcc -g -c main.c -I.
 
-transport: transport.o
+transport: transport.o transNnet.o
 	cd $(SRCDIR)/; \
-	gcc -o ../$(BINDIR)/transport-entity transport.o
+	gcc -o ../$(BINDIR)/transport-entity transport.o transNnet.o
 
-transport.o: $(SRCDIR)/transport.c transNnet
+transport.o: $(SRCDIR)/transport.c transNnet.h
 	cd $(SRCDIR)/; \
 	gcc -g -c transport.c -I.
 
-network: network.o
+network: network.o transNnet.o
 	cd $(SRCDIR)/; \
-	gcc -o ../$(BINDIR)/network-entity network.o
+	gcc -o ../$(BINDIR)/network-entity network.o transNnet.o
 
-network.o: $(SRCDIR)/network.c transNnet
+network.o: $(SRCDIR)/network.c transNnet.h
 	cd $(SRCDIR)/; \
 	gcc -g -c network.c -I.
 
-transNnet: $(SRCDIR)/transNnet.h $(SRCDIR)/transport.h $(SRCDIR)/network.h
+transNnet.o: transNnet.h
+	cd $(SRCDIR)/; \
+	gcc -g -c transNnet.c -I.
+
+transNnet.h: $(SRCDIR)/transNnet.h $(SRCDIR)/transport.h $(SRCDIR)/network.h
 
 clean:
 	rm -f $(SRCDIR)/*.o

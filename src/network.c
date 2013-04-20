@@ -7,6 +7,9 @@
 
 #include <network.h>
 
+Connection* first_con_node = NULL;
+Connection* last_con_node = NULL;
+
 int transToNet_pipe,netToTrans_pipe;
 
 // Point d'entrée dans le programme
@@ -35,6 +38,30 @@ int main(int argc, char** argv)
             sleep(1);
         }
     }
+
+
+    
     
     return 0;
 }
+
+TANT QUE LIRE_TUYAU_ET
+    PERMUTTER PRIM_PACKET_TYPE
+        SI N_CONNECT_REQ
+            SI TESTE_VALIDE
+                ÉCRIRE_TEST_VALIDE(L_ECR)
+
+                GEN_REPONSE_B
+
+                ÉCRIRE_RÉPONSE_B(L_LEC)
+
+                RÉPONDRE_ET_OUI
+            SINON
+                RÉPONDRE_ET_NON
+        SINON SI N_DATA_REQ
+            
+        SINON SI N_DISCONNECT_REQ
+            
+        FIN SI
+    FIN PERMUTTER
+FIN TANT QUE
