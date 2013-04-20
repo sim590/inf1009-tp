@@ -13,7 +13,7 @@
 #define TRANS_PATH_LENGTH 18
 #define NET_PATH "./network-entity"
 #define NET_PATH_LENGTH 16
-#define DEBUG 1
+#define DEBUG 0
 
 #include <stdio.h>
 #include <stdlib.h>

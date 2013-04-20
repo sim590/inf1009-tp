@@ -10,6 +10,8 @@
 
 #define TRANSNNET_MDHCQJ5S
 
+#define DEBUG 1
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>

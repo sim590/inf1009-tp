@@ -16,11 +16,18 @@ int main(int argc, char** argv)
     PRIM_PACKET p;
     int i=0, count = 0;
 
-    while (count++ < 4) {
-        if(read(transToNet_pipe,&p,sizeof(PRIM_PACKET)) > 0)
-            printf("%d\n",p.con_prim_packet.prim);
-        sleep(1);
+    if (DEBUG)
+    {
+        printf("NETWORK:\nMes FD sont:\n%i,%i\n",transToNet_pipe,netToTrans_pipe);
+        while (count++ < 4) {
+            if(read(transToNet_pipe,&p,sizeof(PRIM_PACKET)) > 0)
+            {
+                printf("%d\n",p.con_prim_packet.type);
+                return 0;
+            }
+            sleep(1);
+        }
     }
-
-    exit(EXIT_SUCCESS);
+    
+    return 0;
 }

@@ -21,6 +21,7 @@ int main()
         return -1;
     }
     
+    if (DEBUG) printf("MAIN:\nLes fd sont:\n(%i,%i),(%i,%i)",transToNet_pipe[0],transToNet_pipe[1],netToTrans_pipe[0],netToTrans_pipe[1]);
     pid_t pid = fork();
 
     if (pid == -1)
@@ -30,8 +31,8 @@ int main()
     }
     else if (pid == 0) {
         // Fermeture des côté du tuyaux non-utiles
-        close(transToNet_pipe[0]);
-        close(netToTrans_pipe[1]);
+        //close(transToNet_pipe[0]);
+        //close(netToTrans_pipe[1]);
 
         // Préparation des arguments pour le processus
         // entité transport
@@ -69,8 +70,8 @@ int main()
     }
 
     // On ferme les file descriptors qui ne nous sont pas utiles
-    for (i = 0; i < 2; i++) close(transToNet_pipe[i%2]);
-    for (i = 0; i < 2; i++) close(netToTrans_pipe[i%2]);
+    //for (i = 0; i < 2; i++) close(transToNet_pipe[i%2]);
+    //for (i = 0; i < 2; i++) close(netToTrans_pipe[i%2]);
     
     return 0;    
 }

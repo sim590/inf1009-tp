@@ -28,6 +28,7 @@ int main(int argc,char** argv)
     // (respectivement l'écriture et l'écoute)
     transToNet_pipe = atoi(argv[1]); netToTrans_pipe = atoi(argv[2]);
     
+    if (DEBUG) printf("TRANSPORT\nMes fd sont:\n%i,%i\n",netToTrans_pipe,transToNet_pipe);
     // Lecture du fichier S_LEC et envoie des requêtes et écoute
     // de la réponse.
     
