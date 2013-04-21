@@ -11,6 +11,8 @@
 #define TRANSNNET_MDHCQJ5S
 
 #define DEBUG 0
+#define MAX_WAIT_TIME 10
+#define MAX_PRIM_PACKET_SIZE 262 // octets
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -20,57 +22,41 @@
 
 //-------------------------
 // Primitives lors de la
-// phase de demande de
-// connexion
+// de l'échange entre la
+// couche ET et ER
 //-------------------------
 typedef enum {
+    // Paquet d'établissement de connexion
     N_CONNECT_req,
     N_CONNECT_ind,
     N_CONNECT_resp,
-    N_CONNECT_conf
-} CONNECTION_PRIMITIVE;
-
-//-----------------------
-// Primitives lors de la
-// phase de transfert de
-// données
-//-----------------------
-typedef enum {
+    N_CONNECT_conf,
+    // Paquet de transfert de données
     N_DATA_req,
-    N_DATA_ind
-} DATA_PRIMITIVE;
-
-//-------------------------
-// Primitives lors de la
-// phase de libération de
-// connexion
-//-------------------------
-typedef enum {
+    N_DATA_ind,
+    // Paquet de libération de connexion
     N_DISCONNECT_req,
     N_DISCONNECT_ind
-} REL_PRIMITIVE;
+} PRIMITIVE;
 
 //-------------------------------------------
 // Paquets de communication entre la couche
 // transport et réseau
 //-------------------------------------------
 typedef struct _CON_PRIM_PACKET {
-    int type;
-    CONNECTION_PRIMITIVE prim;
+    PRIMITIVE prim;
     char src_addr;
     char dest_addr;
 } CON_PRIM_PACKET;
 
 typedef struct _DATA_PRIM_PACKET {
-    int type;
-    DATA_PRIMITIVE prim;
+    PRIMITIVE prim;
     char con_number;
     char transaction[256];
 } DATA_PRIM_PACKET;
 
 typedef struct _REL_PRIM_PACKET {
-    int type;
-    REL_PRIMITIVE prim;
+    PRIMITIVE prim;
     char con_number;
     char reason[32];
 } REL_PRIM_PACKET;
@@ -80,10 +66,10 @@ typedef struct _REL_PRIM_PACKET {
 // transport-réseau
 //----------------------------
 typedef union {
-    int type;
-    CON_PRIM_PACKET con_prim_packet;// type = 0
-    DATA_PRIM_PACKET data_prim_packet;// type = 1
-    REL_PRIM_PACKET rel_prim_packet; // type = 2
+    PRIMITIVE prim;
+    CON_PRIM_PACKET con_prim_packet;
+    DATA_PRIM_PACKET data_prim_packet;
+    REL_PRIM_PACKET rel_prim_packet;
 } PRIM_PACKET;
 
 // Noeud de la table de connexions

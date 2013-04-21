@@ -76,8 +76,7 @@ int main(int argc,char** argv)
             connection = (Connection*) add_connection(line_buffer[0]);
 
             // Créaction d'un paquet contenant la primitive N_CONNECT_req
-            p.type = 0; // CON_PRIM_PACKET
-            p.con_prim_packet.prim = N_CONNECT_req;
+            p.prim = N_CONNECT_req;
             p.con_prim_packet.src_addr = (char) rand();  // Adresses aléatoires pour la source
             p.con_prim_packet.dest_addr = (char) rand(); // et la destination..
             
@@ -87,19 +86,18 @@ int main(int argc,char** argv)
             
             char result[256];
             // Action en conséquence
-            switch(p.type)
+            switch(p.prim)
             {
                 // CON_PRIM_PACKET reçu => N_CONNECT_conf
-                case 0:
+                case N_CONNECT_conf:
                     // Écriture des résutlats dans S_ECR
-                    strcpy(result,"Réception de la primitive N_CONNECT.conf");
+                    sprintf(result,"Réception de la primitive N_CONNECT.conf sur la connection %i\n", connection->state[0]);
                     fwrite(result,1,sizeof(result),results_file);
                     // Confirmation de la connexion
                     connection->state[1] = 0x01;
 
                     // Construction du paquet de DATA
-                    p.type = 1;
-                    p.data_prim_packet.prim = N_DATA_req;
+                    p.prim = N_DATA_req;
                     getMessageFromBuffer(line_buffer,message);
                     strcpy(p.data_prim_packet.transaction,message);
                     p.data_prim_packet.con_number = connection->state[0];
@@ -108,22 +106,19 @@ int main(int argc,char** argv)
                     if(sendPacketToInterface(&p,transToNet_pipe) == -1)
                         return -1;
                     break;
-                // wtf?
-                case 1:
-                    break;
                 // REL_PRIM_PACKET reçu => N_DISCONNECT_ind
-                case 2:
-                    remove_connection(connection->state[0]);
+                case N_DISCONNECT_ind:
                     // Écriture des résultats dans S_ECR
-                    strcpy(result,"Réception de la primitive N_DISCONNECT.ind");
+                    sprintf(result,"Réception de la primitive N_DISCONNECT.ind pour la connexion %i\n",connection->state[0]);
+                    // Retrait de la connexion de la table de connexions
+                    remove_connection(connection->state[0]);
                     fwrite(result,1,sizeof(result),results_file);
                     break;
             }
         }
         else {
             // Construction du paquet de DATA
-            p.type = 1;
-            p.data_prim_packet.prim = N_DATA_req;
+            p.prim = N_DATA_req;
             getMessageFromBuffer(line_buffer,message);
             strcpy(p.data_prim_packet.transaction,message);
             p.data_prim_packet.con_number = connection->state[0];
@@ -136,11 +131,10 @@ int main(int argc,char** argv)
 
     // Construction d'un paquet REL_PRIM_PACKET
     // et vidage de la table de connexions
-    p.type = 1;
-    p.rel_prim_packet.prim = REL_ind;
-    strcpy(p.rel_prim_packet.reason,"Fin des requêtes..");
+    p.prim = N_DISCONNECT_req;
     connection = first_con_node;
     while (connection) {
+        sprintf(p.rel_prim_packet.reason,"Fin des requêtes sur la connexion %i\n",connection->state[0]);
         p.rel_prim_packet.con_number = connection->state[0];
         if(sendPacketToInterface(&p,transToNet_pipe) == -1)
             return -1;

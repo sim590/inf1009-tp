@@ -17,22 +17,49 @@
 int getPacketFromInterface(PRIM_PACKET* p, int fd)
 {
     int redFromPipe, count = 0;
-    
+    char buffer[MAX_PRIM_PACKET_SIZE];
+
     do
     {
-        redFromPipe = read(fd,p,sizeof(PRIM_PACKET));
+        redFromPipe = read(fd,buffer,sizeof(PRIM_PACKET));
         if (count && count < 4) {
             sleep(1);
         }
-        else if (count > 3) {
-            fprintf(stderr, "Erreur: Aucune réponse du fournisseur réseau pour une N_CONNECT.REQ après 4 secondes..\n");
+        else if (count > MAX_WAIT_TIME) {
+            fprintf(stderr, "Erreur: Aucune réponse du fournisseur réseau pour une N_CONNECT.REQ après %i secondes..\n",MAX_WAIT_TIME);
             return -1;
         }
         count++;
     }
-    while (redFromPipe < 1); 
+    while (redFromPipe < 1);
+
+    // Reconstruction du paquet
+    p->prim = atoi(buffer); // 4 premiers octets du buffer
+    switch(p->prim)
+    {
+        // Paquet d'établissement de connexion
+        case N_CONNECT_req:
+        case N_CONNECT_ind:
+        case N_CONNECT_resp:
+        case N_CONNECT_conf:
+            p->con_prim_packet.src_addr = buffer[5];
+            p->con_prim_packet.dest_addr = buffer[6];
+            break;
+        // Paquet de transfert de données
+        case N_DATA_req:
+        case N_DATA_ind:
+            p->data_prim_packet.con_number = buffer[5]; // 6e octet.. On saute le \0 après les 4 premiers octets
+            strcpy(p->data_prim_packet.transaction,buffer+6);
+            break;
+        // Paquet de libération de connexion
+        case N_DISCONNECT_req:
+        case N_DISCONNECT_ind:
+            p->rel_prim_packet.con_number = buffer[5];
+            strcpy(p->rel_prim_packet.reason,buffer+6);
+            break;
+    }
    
-   return redFromPipe;
+    return redFromPipe;
 }
 
 //-----------------------------------------
@@ -44,17 +71,47 @@ int getPacketFromInterface(PRIM_PACKET* p, int fd)
 //-----------------------------------------
 int sendPacketToInterface(PRIM_PACKET* p, int fd)
 {
-    int writtenToPipe, count = 0;
-    
+    int writtenToPipe, count = 0, i;
+    char buffer[MAX_PRIM_PACKET_SIZE];
+
+    // Construction d'un buffer
+    for (i = 0; i < 4; i++)
+        buffer[i] = (p->prim << i*8) >> 24;
+    buffer[4] = '\0';
+    switch(p->prim)
+    {
+        // Paquet d'établissement de connexion
+        case N_CONNECT_req:
+        case N_CONNECT_ind:
+        case N_CONNECT_resp:
+        case N_CONNECT_conf:
+            buffer[5] = p->con_prim_packet.src_addr;
+            buffer[6] = p->con_prim_packet.dest_addr;
+            break;
+        // Paquet de transfert de données
+        case N_DATA_req:
+        case N_DATA_ind:
+            buffer[5] = p->data_prim_packet.con_number;
+            strcpy(buffer+6,p->data_prim_packet.transaction);
+            break;
+        // Paquet de libération de connexion
+        case N_DISCONNECT_req:
+        case N_DISCONNECT_ind:
+            buffer[5] = p->rel_prim_packet.con_number;
+            strcpy(buffer+6,p->rel_prim_packet.reason);
+            break;
+    }
+
+
     do
     {
-        writtenToPipe = write(fd,p,sizeof(PRIM_PACKET));
+        writtenToPipe = write(fd,buffer,sizeof(PRIM_PACKET));
     
         if (count && count < 4) {
             sleep(1);
         }
-        else if (count > 3) {
-            fprintf(stderr, "Erreur: Impossible d'écrire dans le pipe après 4 secondes.\n");
+        else if (count > MAX_WAIT_TIME) {
+            fprintf(stderr, "Erreur: Impossible d'écrire dans le pipe après %i secondes.\n",MAX_WAIT_TIME);
             return -1;
         }
         count++;

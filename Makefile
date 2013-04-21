@@ -11,7 +11,7 @@ SRCDIR=./src
 BINDIR=./bin
 
 all: main transport network
-main: main.o
+main: main.o bindir
 	cd $(SRCDIR)/; \
 	gcc -o ../$(BINDIR)/inf1009-tp main.o
 
@@ -19,7 +19,7 @@ main.o: $(SRCDIR)/main.c $(SRCDIR)/main.h
 	cd $(SRCDIR)/; \
 	gcc -g -c main.c -I.
 
-transport: transport.o transNnet.o
+transport: transport.o transNnet.o bindir
 	cd $(SRCDIR)/; \
 	gcc -o ../$(BINDIR)/transport-entity transport.o transNnet.o
 
@@ -27,7 +27,7 @@ transport.o: $(SRCDIR)/transport.c transNnet.h
 	cd $(SRCDIR)/; \
 	gcc -g -c transport.c -I.
 
-network: network.o transNnet.o
+network: network.o transNnet.o bindir
 	cd $(SRCDIR)/; \
 	gcc -o ../$(BINDIR)/network-entity network.o transNnet.o
 
@@ -47,3 +47,5 @@ clean:
 cleanall: clean
 	rm -f $(BINDIR)/inf1009-tp $(BINDIR)/transport-entity $(BINDIR)/network-entity
 
+bindir:
+	mkdir -p $(BINDIR)
