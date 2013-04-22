@@ -10,6 +10,10 @@
 
 #define NETWORK_UNQBN59Z
 
+#define L_LEC "./L_LEC"
+#define L_ECR "./L_ECR"
+#define MAX_PACKET_SIZE 163
+
 #include <transNnet.h>
 
 // Type de paquet lors de la phase
@@ -19,18 +23,15 @@
      * libération = 00010011
      */ 
 typedef enum {
-    CALLING=0x09,
-    CON_ind=0x0F,
+    CON_req=0x0B,
+    CON_conf=0x0F,
     REL_ind=0x13,
-    NET_REFUSED=0x01,
-    USER_REFUSED=0x02
 } CONNECTION_PACKET_TYPE;
 
-//typedef struct _COMM_ET_ER {
-//    CONNECTION_PRIMITIVE prim;
-//    char src_addr;
-//    char dest_addr;
-//} COMM_ET_ER;
+typedef enum {
+    REMOTE_DENY=0x01,
+    NET_DENY=0x02
+} REL_REASON;
 
 //----------------------------------
 // Paquets lors la phase 
@@ -38,11 +39,11 @@ typedef enum {
 //----------------------------------
 typedef struct _CONNECTION_PACKET {
     int packet_type;
-    CONNECTION_PACKET_TYPE con_type; // {CALL,CONTD,REL} 
+    CONNECTION_PACKET_TYPE con_packet_type;
     char con_number;
-    char source_addr; // adresses [0,249]
+    char src_addr; // adresses [0,249]
     char dest_addr;
-    char reason[32]; // raison de la libération de connexion 
+    REL_REASON reason; // raison de la libération de connexion 
 } CONNECTION_PACKET;
 
 //----------------------------
@@ -67,8 +68,8 @@ typedef struct _CONNECTION_PACKET {
 */
 typedef struct _DATA_PACKET {
     int packet_type;
-    char con_number;
     char type; 
+    char con_number;
     char segm_data[128];
 } DATA_PACKET;
 
@@ -78,9 +79,9 @@ typedef struct _DATA_PACKET {
 //--------------------------
 typedef struct _RELEASE_PACKET {
     int packet_type;
-    char con_number;
     char type;
-    char source_addr;
+    char con_number;
+    char src_addr;
     char dest_addr;
 } RELEASE_PACKET;
 
@@ -88,10 +89,14 @@ typedef struct _RELEASE_PACKET {
 // Network Protocol Data Unit
 //----------------------------
 typedef union {
-    int packet_type;
+    int packet_type; // 0: CONNECTION_PACKET, 1: DATA_PACKET, 2: RELEASE_PACKET
     CONNECTION_PACKET con_packet;
     DATA_PACKET data_packet;
     RELEASE_PACKET rel_packet;
 } PACKET;
+
+int sendPacketToDataLinkLayer(PACKET*,FILE*);
+int genRemotePacketResponse(PACKET*);
+
 #endif /* end of include guard: NETWORK_UNQBN59Z */
 

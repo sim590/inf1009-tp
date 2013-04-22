@@ -10,7 +10,7 @@
 
 #define TRANSNNET_MDHCQJ5S
 
-#define DEBUG 0
+#define DEBUG 1
 #define MAX_WAIT_TIME 10
 #define MAX_PRIM_PACKET_SIZE 262 // octets
 
@@ -47,6 +47,7 @@ typedef struct _CON_PRIM_PACKET {
     PRIMITIVE prim;
     char src_addr;
     char dest_addr;
+    char con_number;
 } CON_PRIM_PACKET;
 
 typedef struct _DATA_PRIM_PACKET {
@@ -72,8 +73,10 @@ typedef union {
     REL_PRIM_PACKET rel_prim_packet;
 } PRIM_PACKET;
 
+//---------------------------------
 // Noeud de la table de connexions
 // de la couche transport
+//---------------------------------
 typedef struct _TRANS_CON {
     union Connection* next;
     char state[2]; // [no_connexion,état_connexion]..
@@ -81,8 +84,10 @@ typedef struct _TRANS_CON {
                     // 0xFF pour connecté
 } TRANS_CON;
 
+//---------------------------------
 // Noeud de la table de connexions
 // de la couche réseau
+//---------------------------------
 typedef struct _NET_CON {
     union Connection* next;
     char state[2];
@@ -105,7 +110,7 @@ int getPacketFromInterface(PRIM_PACKET*, int);
 int sendPacketToInterface(PRIM_PACKET*,int);
 void deleteAllConnections();
 Connection* findConnection(char);
-Connection* add_connection(char);
+Connection* add_connection(char,char*,char*);
 void remove_connection(char);
 int whatsConState(char);
 

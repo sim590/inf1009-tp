@@ -18,8 +18,11 @@ int main(int argc,char** argv)
     FILE* results_file = fopen(S_ECR,"w");
 
     if (transaction_file == NULL) {
-        fprintf(stderr,"Impossible d'ouvrir le fichier S_LEC\n");
+        fprintf(stderr,"Impossible d'ouvrir le fichier %s\n",S_LEC);
         return -1;
+    }
+    if (results_file == NULL) {
+        fprintf(stderr, "Impossible d'ouvrir le fichier %s\n",S_ECR);
     }
     char line_buffer[256], message[256];
     int i, flags;
@@ -73,12 +76,13 @@ int main(int argc,char** argv)
         if (!connection/*==NULL*/) {
             
             // Engager une connexion
-            connection = (Connection*) add_connection(line_buffer[0]);
+            connection = (Connection*) add_connection(line_buffer[0],NULL,NULL);
 
             // Créaction d'un paquet contenant la primitive N_CONNECT_req
             p.prim = N_CONNECT_req;
             p.con_prim_packet.src_addr = (char) rand();  // Adresses aléatoires pour la source
             p.con_prim_packet.dest_addr = (char) rand(); // et la destination..
+            p.con_prim_packet.con_number = line_buffer[0];
             
             // Envoie d'un paquet et écoute de la réponse de ER
             if(sendPacketToInterface(&p,transToNet_pipe) == -1 || getPacketFromInterface(&p,netToTrans_pipe) == -1)

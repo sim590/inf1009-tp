@@ -21,12 +21,12 @@ int getPacketFromInterface(PRIM_PACKET* p, int fd)
 
     do
     {
-        redFromPipe = read(fd,buffer,sizeof(PRIM_PACKET));
+        redFromPipe = read(fd,buffer,sizeof(buffer));
         if (count && count < 4) {
             sleep(1);
         }
         else if (count > MAX_WAIT_TIME) {
-            fprintf(stderr, "Erreur: Aucune réponse du fournisseur réseau pour une N_CONNECT.REQ après %i secondes..\n",MAX_WAIT_TIME);
+            fprintf(stderr, "Erreur: Aucune réponse après %i secondes d'écoute du tuyau de descripteur de fichier %i..\n",MAX_WAIT_TIME,fd);
             return -1;
         }
         count++;
@@ -44,6 +44,7 @@ int getPacketFromInterface(PRIM_PACKET* p, int fd)
         case N_CONNECT_conf:
             p->con_prim_packet.src_addr = buffer[5];
             p->con_prim_packet.dest_addr = buffer[6];
+            p->con_prim_packet.con_number = buffer[7];
             break;
         // Paquet de transfert de données
         case N_DATA_req:
@@ -87,6 +88,7 @@ int sendPacketToInterface(PRIM_PACKET* p, int fd)
         case N_CONNECT_conf:
             buffer[5] = p->con_prim_packet.src_addr;
             buffer[6] = p->con_prim_packet.dest_addr;
+            buffer[7] = p->con_prim_packet.con_number;
             break;
         // Paquet de transfert de données
         case N_DATA_req:
@@ -105,13 +107,10 @@ int sendPacketToInterface(PRIM_PACKET* p, int fd)
 
     do
     {
-        writtenToPipe = write(fd,buffer,sizeof(PRIM_PACKET));
+        writtenToPipe = write(fd,buffer,sizeof(buffer));
     
-        if (count && count < 4) {
-            sleep(1);
-        }
-        else if (count > MAX_WAIT_TIME) {
-            fprintf(stderr, "Erreur: Impossible d'écrire dans le pipe après %i secondes.\n",MAX_WAIT_TIME);
+        if (count > 3) {
+            fprintf(stderr, "Erreur: Impossible d'écrire dans le tuyau de descripteur de fichier %i\n");
             return -1;
         }
         count++;
@@ -155,11 +154,15 @@ Connection* findConnection(char con_number)
 // Ajout d'un noeud de connexion à la
 // liste chaînée de connexions
 //---------------------------------------
-Connection* add_connection(char con_number)
+Connection* add_connection(char con_number, char* src_addr, char* dest_addr)
 {
     Connection* node = malloc(sizeof(Connection));
     node->state[0] = con_number;
     node->state[1] = 0x00;
+    if (src_addr != NULL && dest_addr != NULL) {
+        node->ncon.src_addr = *src_addr;
+        node->ncon.dest_addr = *dest_addr;
+    }
     node->next = NULL;
 
     // Si la liste est vide
@@ -229,7 +232,7 @@ int whatsConState(char con_number)
 
     while (node!=NULL) {
          if (node->state[0] == con_number) {
-            return node->state[0]; // 0x00 ou 0x01
+            return node->state[1]; // 0x00 ou 0x01
          }
     }
 
