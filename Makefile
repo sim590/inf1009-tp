@@ -49,3 +49,4 @@ cleanall: clean
 
 bindir:
 	mkdir -p $(BINDIR)
+	touch $(BINDIR)/S_LEC $(BINDIR)/S_ECR $(BINDIR)/L_LEC $(BINDIR)/L_ECR

@@ -26,10 +26,12 @@ int main(int argc, char** argv)
         fprintf(stderr, "Impossible d'ouvrir le fichier %s\n",L_LEC);
     }
 
-    int i=0, count = 0, flags,flag_response;
+    int i=0, count = 0, flags,flag_response, length, response;
+    char segmt[128], pr=0x01, ps=0x00;
     PRIM_PACKET p;
     PACKET packet, sndPacket;
-    char segmt[128];
+    Connection* connection;
+
     netToTrans_pipe = atoi(argv[1]); transToNet_pipe = atoi(argv[2]);
 
     // On s'assure que les fd sont en mode 0_NONBLOCK
@@ -37,23 +39,6 @@ int main(int argc, char** argv)
     fcntl(transToNet_pipe,F_SETFL, flags | O_NONBLOCK);
     flags = fcntl(netToTrans_pipe,F_GETFL,0);
     fcntl(netToTrans_pipe,F_SETFL, flags | O_NONBLOCK);
-
-    if (DEBUG)
-    {
-        printf("NETWORK:\nMes FD sont:\n%i,%i\n",transToNet_pipe,netToTrans_pipe);
-        if(getPacketFromInterface(&p,transToNet_pipe) > 0)
-        {
-            printf("%d\n",p.con_prim_packet.prim);
-            return 0;
-        }
-        if(getPacketFromInterface(&p,transToNet_pipe) > 0)
-        {
-            printf("%d\n",p.con_prim_packet.prim);
-            return 0;
-        }
-
-
-    }
 
     // ALGO
     //-------
@@ -140,6 +125,7 @@ int main(int argc, char** argv)
                 p.prim = N_CONNECT_conf;
                 if(sendPacketToInterface(&p,netToTrans_pipe) == -1)
                     return -1;
+                findConnection(p.con_prim_packet.con_number)->state[1] = 0x01;
 
                 break;
             case N_DATA_req:
@@ -149,13 +135,72 @@ int main(int argc, char** argv)
                  * va modifier celui qu'on lui passe..
                  */
 
-                //while () {
+                // Calcul de la longueur du message
+                while (!p.data_prim_packet.transaction[length])
+                    length++;
+
+                // Segmentation s'il y a lieu et envoie des segments
+                for (i = 0; i < length; i+=128) {
+
+                    // Construction d'un paquet de DATA
+                    packet.packet_type = 1; // DATA_PACKET
+
+                    // le type = [p(r),M,p(s),0]
+                    if (i+128 < length)
+                        packet.data_packet.type = ((pr << 5) + (ps << 1)) | 0x10;
+                    else
+                        packet.data_packet.type = (pr << 5) + (ps << 1);
+
+                    packet.data_packet.con_number = p.data_prim_packet.con_number;
+
+                    // Copie de 128 octets du message vers un segment
+                    strncpy(packet.data_packet.segm_data,p.data_prim_packet.transaction,128);
+
+                    // Envoie à la couche liaison
+                    sendPacketToDataLinkLayer(&sndPacket,toDataLink);
                     
-                    //// Construction d'un paquet de DATA
-                //}
+                    // Sauvegarde du paquet pour la phase de la réponse du distant
+                    // car on doit envoyer deux fois maximum
+                    memcpy(&sndPacket,&packet,sizeof(PACKET));
+                    
+                    // Aucune réponse ou réponse négative
+                    if ((response = genRemotePacketResponse(&sndPacket)) <= 0) {
+                        if (response < 0)
+                            // Écrire la réponse dans L_LEC
+                            sendPacketToDataLinkLayer(&sndPacket,fromDataLink);
+
+                        // Deuxième envoie
+                        sendPacketToDataLinkLayer(&packet,toDataLink);
+                        
+                        // Réception d'un acquitement positif ou négatif
+                        if(genRemotePacketResponse(&packet)) {
+                            sendPacketToDataLinkLayer(&packet,fromDataLink);
+                        }
+                    }
+                    // Réponse positive
+                    else
+                        sendPacketToDataLinkLayer(&sndPacket,fromDataLink);
+
+                    ps = pr;
+                    pr = ((ps+0x01) << 5) >> 5; // modulo
+                }
 
                 break;
             case N_DISCONNECT_req:
+                connection = findConnection(p.rel_prim_packet.con_number);
+                
+                // Construction d'un paquet de libération
+                packet.packet_type = 2; // RELEASE_PACKET
+                packet.rel_packet.type = 0x13;
+                packet.rel_packet.con_number = p.rel_prim_packet.con_number;
+                packet.rel_packet.src_addr = connection->ncon.src_addr;
+                packet.rel_packet.dest_addr = connection->ncon.dest_addr;
+                
+                // Envoie d'un paquet d'indication de libération
+                sendPacketToDataLinkLayer(&packet,toDataLink);
+                
+                // Retrait de de la connexion de la table de connexions
+                remove_connection(p.rel_prim_packet.con_number);
                 break;
         }
     }
