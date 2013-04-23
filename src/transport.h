@@ -16,5 +16,6 @@
 
 
 int getMessageFromBuffer(char buffer[],char*);
+int writeResults(char*,char*);
 
 #endif /* end of include guard: TRANSPORT_4R0LNUHE */

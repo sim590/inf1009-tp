@@ -14,15 +14,13 @@ Connection* last_con_node = NULL;
 // Point d'entrée dans le programme
 int main(int argc,char** argv)
 {
-    FILE* transaction_file = fopen(S_LEC,"r");
-    FILE* results_file = fopen(S_ECR,"w");
+    FILE* transaction_file = fopen(S_LEC,"a+");
+    fclose(transaction_file);
+    transaction_file = fopen(S_LEC,"r");
 
     if (transaction_file == NULL) {
         fprintf(stderr,"Impossible d'ouvrir le fichier %s\n",S_LEC);
         return -1;
-    }
-    if (results_file == NULL) {
-        fprintf(stderr, "Impossible d'ouvrir le fichier %s\n",S_ECR);
     }
     char line_buffer[256], message[256];
     int i, flags;
@@ -82,10 +80,12 @@ int main(int argc,char** argv)
             p.prim = N_CONNECT_req;
             p.con_prim_packet.src_addr = (char) rand();  // Adresses aléatoires pour la source
             p.con_prim_packet.dest_addr = (char) rand(); // et la destination..
-            p.con_prim_packet.con_number = line_buffer[0];
+            p.con_prim_packet.con_number = connection->tcon.con_number;
             
             // Envoie d'un paquet et écoute de la réponse de ER
-            if(sendPacketToInterface(&p,transToNet_pipe) == -1 || getPacketFromInterface(&p,netToTrans_pipe) == -1)
+            if(sendPacketToInterface(&p,transToNet_pipe) == -1)
+                return -1;
+            if (getPacketFromInterface(&p,netToTrans_pipe) == -1)
                 return -1;
             
             char result[256];
@@ -95,16 +95,18 @@ int main(int argc,char** argv)
                 // CON_PRIM_PACKET reçu => N_CONNECT_conf
                 case N_CONNECT_conf:
                     // Écriture des résutlats dans S_ECR
-                    sprintf(result,"Réception de la primitive N_CONNECT.conf sur la connection %i\n", connection->state[0]);
-                    fwrite(result,1,sizeof(result),results_file);
+                    sprintf(result,"Réception de la primitive N_CONNECT.conf sur la connection %c\n", connection->tcon.con_number);
+                    writeResults(result,S_ECR);
+                    
                     // Confirmation de la connexion
-                    connection->state[1] = 0x01;
+                    connection->tcon.state = 0x01;
 
                     // Construction du paquet de DATA
                     p.prim = N_DATA_req;
                     getMessageFromBuffer(line_buffer,message);
+                    
                     strcpy(p.data_prim_packet.transaction,message);
-                    p.data_prim_packet.con_number = connection->state[0];
+                    p.data_prim_packet.con_number = connection->tcon.con_number;
                     
                     // Envoie du paquet à l'ER
                     if(sendPacketToInterface(&p,transToNet_pipe) == -1)
@@ -113,10 +115,11 @@ int main(int argc,char** argv)
                 // REL_PRIM_PACKET reçu => N_DISCONNECT_ind
                 case N_DISCONNECT_ind:
                     // Écriture des résultats dans S_ECR
-                    sprintf(result,"Réception de la primitive N_DISCONNECT.ind pour la connexion %i\n",connection->state[0]);
+                    sprintf(result,"Réception de la primitive N_DISCONNECT.ind pour la connexion %c\n",connection->tcon.con_number);
+                    writeResults(result,S_ECR);
+                    
                     // Retrait de la connexion de la table de connexions
-                    remove_connection(connection->state[0]);
-                    fwrite(result,1,sizeof(result),results_file);
+                    remove_connection(connection->tcon.con_number);
                     break;
             }
         }
@@ -125,7 +128,7 @@ int main(int argc,char** argv)
             p.prim = N_DATA_req;
             getMessageFromBuffer(line_buffer,message);
             strcpy(p.data_prim_packet.transaction,message);
-            p.data_prim_packet.con_number = connection->state[0];
+            p.data_prim_packet.con_number = connection->tcon.con_number;
             
             // Envoyer N_DATA.req
             if(sendPacketToInterface(&p,transToNet_pipe) == -1)
@@ -138,17 +141,16 @@ int main(int argc,char** argv)
     p.prim = N_DISCONNECT_req;
     connection = first_con_node;
     while (connection) {
-        sprintf(p.rel_prim_packet.reason,"Fin des requêtes sur la connexion %i\n",connection->state[0]);
-        p.rel_prim_packet.con_number = connection->state[0];
+        sprintf(p.rel_prim_packet.reason,"Fin des requêtes sur la connexion %i\n",connection->tcon.con_number);
+        p.rel_prim_packet.con_number = connection->tcon.con_number;
         if(sendPacketToInterface(&p,transToNet_pipe) == -1)
             return -1;
     }
 
     deleteAllConnections();
 
-    // Fermeture des fichiers S_ECR, S_LEC
+    // Fermeture du fichier S_LEC
     fclose(transaction_file);
-    fclose(results_file);
     
     return 0;
 }
@@ -166,11 +168,10 @@ int getMessageFromBuffer(char buffer[], char message[])
     int i=0,j;
 
     // On trouve l'indice auquel se trouve
-    while (i++ < 255 || buffer[i-1] != '\\') {
-    }
-
-    if (!i<255) {
-        return -1;
+    for (i = 0; i < 254 ; i++) {
+        if (buffer[i] == '\\') {
+            break;
+        }
     }
 
     for (j = 0; j < 255 - i; j++) {
@@ -180,3 +181,21 @@ int getMessageFromBuffer(char buffer[], char message[])
     return j;
 }
 
+//---------------------------------------
+// Écrit les résultats dans le fichier
+// spécifié
+//---------------------------------------
+int writeResults(char* results, char* file_path)
+{
+    FILE* file = fopen(file_path,"a+");
+    int writtenToFile;
+    
+    if((writtenToFile = fprintf(file,results)) < 1) {
+        fprintf(stderr,"Impossible d'écrire dans le fichier %s",file_path);
+        return -1;
+    }
+    
+    fclose(file);
+
+    return writtenToFile;
+}

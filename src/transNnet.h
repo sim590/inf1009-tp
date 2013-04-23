@@ -11,7 +11,7 @@
 #define TRANSNNET_MDHCQJ5S
 
 #define DEBUG 1
-#define MAX_WAIT_TIME 10
+#define MAX_WAIT_TIME 3600
 #define MAX_PRIM_PACKET_SIZE 262 // octets
 
 #include <stdio.h>
@@ -78,10 +78,9 @@ typedef union {
 // de la couche transport
 //---------------------------------
 typedef struct _TRANS_CON {
-    union Connection* next;
-    char state[2]; // [no_connexion,état_connexion]..
-                    // L'état de connexion est 0x00 pour déconnecté et
-                    // 0xFF pour connecté
+    union _Connection* next;
+    char con_number;
+    char state;
 } TRANS_CON;
 
 //---------------------------------
@@ -89,15 +88,14 @@ typedef struct _TRANS_CON {
 // de la couche réseau
 //---------------------------------
 typedef struct _NET_CON {
-    union Connection* next;
-    char state[2];
+    union _Connection* next;
+    char con_number;
+    char state;
     char src_addr;
     char dest_addr;
 } NET_CON;
 
 typedef union _Connection {
-    union _Connection* next;
-    char state[2];
     TRANS_CON tcon;
     NET_CON ncon;
 } Connection;

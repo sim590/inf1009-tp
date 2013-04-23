@@ -95,7 +95,7 @@ typedef union {
     RELEASE_PACKET rel_packet;
 } PACKET;
 
-int sendPacketToDataLinkLayer(PACKET*,FILE*);
+int sendPacketToDataLinkLayer(PACKET*,char*);
 int genRemotePacketResponse(PACKET*);
 
 #endif /* end of include guard: NETWORK_UNQBN59Z */

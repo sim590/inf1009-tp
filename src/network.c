@@ -15,25 +15,15 @@ int transToNet_pipe,netToTrans_pipe;
 // Point d'entrée dans le programme
 int main(int argc, char** argv)
 {
-    // Ouverture des fichiers 
-    FILE* toDataLink = fopen(L_ECR,"w");
-    FILE* fromDataLink = fopen(L_LEC,"w");
-
-    if (toDataLink == NULL) {
-        fprintf(stderr, "Impossible d'ouvrir le fichier %s\n",L_ECR);
-    }
-    if (fromDataLink == NULL) {
-        fprintf(stderr, "Impossible d'ouvrir le fichier %s\n",L_LEC);
-    }
-
     int i=0, count = 0, flags,flag_response, length, response;
-    char segmt[128], pr=0x01, ps=0x00;
+    char segmt[128], pr,ps;
     PRIM_PACKET p;
     PACKET packet, sndPacket;
     Connection* connection;
 
     netToTrans_pipe = atoi(argv[1]); transToNet_pipe = atoi(argv[2]);
-
+    if (DEBUG) printf("NETWORK:\nMes fd sont:\n%i,%i\n",transToNet_pipe,netToTrans_pipe);
+    
     // On s'assure que les fd sont en mode 0_NONBLOCK
     flags = fcntl(transToNet_pipe,F_GETFL,0);
     fcntl(transToNet_pipe,F_SETFL, flags | O_NONBLOCK);
@@ -79,7 +69,6 @@ int main(int argc, char** argv)
         //FIN SI
     //FIN TANT QUE
    
-    // TODO:
     while (getPacketFromInterface(&p,transToNet_pipe) > -1) {
         switch(p.prim)
         {
@@ -93,17 +82,18 @@ int main(int argc, char** argv)
                 }
 
                 // Acceptation au niveau de l'entité réseau
-                add_connection(p.con_prim_packet.con_number,&p.con_prim_packet.src_addr,&p.con_prim_packet.dest_addr);
+                connection = add_connection(p.con_prim_packet.con_number,&p.con_prim_packet.src_addr,&p.con_prim_packet.dest_addr);
 
                 // Construction d'un paquet pour envoie sur
                 // la couche liaison
                 packet.packet_type = 0; // CONNECTION_PACKET
+                packet.con_packet.con_packet_type = CON_req;
                 packet.con_packet.con_number = p.con_prim_packet.con_number;
                 packet.con_packet.src_addr = p.con_prim_packet.src_addr;
                 packet.con_packet.dest_addr = p.con_prim_packet.dest_addr;
 
                 // Envoie à la couche liaison
-                if (sendPacketToDataLinkLayer(&packet,toDataLink) == -1)
+                if (sendPacketToDataLinkLayer(&packet,L_ECR) == -1)
                     return -1;
 
                 // Réponse du distant
@@ -119,13 +109,13 @@ int main(int argc, char** argv)
                 }
                 
                 // Écriture de la réponse du distant dans L_LEC
-                sendPacketToDataLinkLayer(&packet,fromDataLink);
+                sendPacketToDataLinkLayer(&packet,L_LEC);
                 
                 // Confirmation de la connexion
                 p.prim = N_CONNECT_conf;
                 if(sendPacketToInterface(&p,netToTrans_pipe) == -1)
                     return -1;
-                findConnection(p.con_prim_packet.con_number)->state[1] = 0x01;
+                connection->ncon.state = 0x01;
 
                 break;
             case N_DATA_req:
@@ -134,11 +124,9 @@ int main(int argc, char** argv)
                  * une copie du paquet car la fonction genRemotePacketResponse(PACKET*)
                  * va modifier celui qu'on lui passe..
                  */
+                pr=0x01, ps=0x00;
 
-                // Calcul de la longueur du message
-                while (!p.data_prim_packet.transaction[length])
-                    length++;
-
+                length = (int) strlen(p.data_prim_packet.transaction);
                 // Segmentation s'il y a lieu et envoie des segments
                 for (i = 0; i < length; i+=128) {
 
@@ -157,7 +145,7 @@ int main(int argc, char** argv)
                     strncpy(packet.data_packet.segm_data,p.data_prim_packet.transaction,128);
 
                     // Envoie à la couche liaison
-                    sendPacketToDataLinkLayer(&sndPacket,toDataLink);
+                    sendPacketToDataLinkLayer(&sndPacket,L_ECR);
                     
                     // Sauvegarde du paquet pour la phase de la réponse du distant
                     // car on doit envoyer deux fois maximum
@@ -167,22 +155,22 @@ int main(int argc, char** argv)
                     if ((response = genRemotePacketResponse(&sndPacket)) <= 0) {
                         if (response < 0)
                             // Écrire la réponse dans L_LEC
-                            sendPacketToDataLinkLayer(&sndPacket,fromDataLink);
+                            sendPacketToDataLinkLayer(&sndPacket,L_LEC);
 
                         // Deuxième envoie
-                        sendPacketToDataLinkLayer(&packet,toDataLink);
+                        sendPacketToDataLinkLayer(&packet,L_ECR);
                         
                         // Réception d'un acquitement positif ou négatif
                         if(genRemotePacketResponse(&packet)) {
-                            sendPacketToDataLinkLayer(&packet,fromDataLink);
+                            sendPacketToDataLinkLayer(&packet,L_LEC);
                         }
                     }
                     // Réponse positive
                     else
-                        sendPacketToDataLinkLayer(&sndPacket,fromDataLink);
+                        sendPacketToDataLinkLayer(&sndPacket,L_LEC);
 
                     ps = pr;
-                    pr = ((ps+0x01) << 5) >> 5; // modulo
+                    pr = (((ps+0x01) << 5) >> 5); // modulo
                 }
 
                 break;
@@ -197,14 +185,14 @@ int main(int argc, char** argv)
                 packet.rel_packet.dest_addr = connection->ncon.dest_addr;
                 
                 // Envoie d'un paquet d'indication de libération
-                sendPacketToDataLinkLayer(&packet,toDataLink);
+                sendPacketToDataLinkLayer(&packet,L_ECR);
                 
                 // Retrait de de la connexion de la table de connexions
                 remove_connection(p.rel_prim_packet.con_number);
                 break;
         }
     }
-    
+
     return 0;
 }
 
@@ -212,53 +200,59 @@ int main(int argc, char** argv)
 // Envoie d'un paquet à la couche
 // liaison
 //----------------------------------
-int sendPacketToDataLinkLayer(PACKET* p, FILE* f)
+int sendPacketToDataLinkLayer(PACKET* p, char* file_path)
 {
     char buffer[MAX_PACKET_SIZE];
-    int i, writtenToFile, count;
+    int i, writtenToFile, count = 0;
+    FILE* file;
 
     // Construction d'un buffer à partir d'un PACKET
-    for (i = 0; i < 4; i++) {
-        buffer[i] = (p->packet_type << i*8) >> 24;
-    }
-    buffer[4] = '\0';
     switch(p->packet_type)
     {
         // CONNECTION_PACKET
         case 0:
-            for (i = 0; i < 4; i++)
-                buffer[i+5] = (p->con_packet.con_packet_type >> i*8) >> 24;
-            buffer[8] = '\0';
-            buffer[9] = p->con_packet.con_number;
-            buffer[10] = p->con_packet.src_addr;
-            buffer[11] = p->con_packet.dest_addr;
+            sprintf(buffer,"%c/%p/%i/%i",p->con_packet.con_number,
+                                            p->con_packet.con_packet_type,
+                                            p->con_packet.src_addr,
+                                            p->con_packet.dest_addr);
 
-            if (p->con_packet.con_packet_type == REL_ind)
-                for (i = 0; i < 4; i++)
-                    buffer[i+12] = (p->con_packet.reason << i*8) >> 24;
+            if (p->con_packet.con_packet_type == REL_ind) {
+                char tmp[2];
+                sprintf(tmp,"%p",(char)p->con_packet.reason);
+                strcat(buffer,tmp);
+            }
+
+            strcat(buffer,"\n");
             break;
 
         // DATA_PACKET
         case 1:
-            buffer[5] = p->data_packet.type;
-            buffer[6] = p->data_packet.con_number;
-            strcpy(buffer+7,p->data_packet.segm_data);
+            sprintf(buffer,"%c/%p/%s\n",p->data_packet.con_number,p->data_packet.type,
+                                          p->data_packet.segm_data);
             break;
 
         // RELEASE_PACKET
         case 2:
-            buffer[5] = p->rel_packet.type;
-            buffer[6] = p->rel_packet.con_number;
-            buffer[7] = p->rel_packet.src_addr;
-            buffer[8] = p->rel_packet.dest_addr;
+            sprintf(buffer,"%c/%p/%i/%i\n",p->rel_packet.con_number,
+                                              p->rel_packet.type,
+                                              p->rel_packet.src_addr,
+                                              p->rel_packet.dest_addr);
             break;
+    }
+    
+    // Ouverture du fichier
+    file = fopen(file_path,"a+");
+    
+    if (file == NULL) {
+        fprintf(stderr, "Impossible d'ouvrir le fichier %s\n",L_ECR);
+        return -1;
     }
     
     do {
 
-        writtenToFile = fwrite(buffer,sizeof(buffer),1,f);
+        writtenToFile = fprintf(file,buffer);
 
-        if (count && count < 4) {
+        if (count && count < MAX_WAIT_TIME) {
             sleep(1);
         }
         else if (count > MAX_WAIT_TIME) {
@@ -266,7 +260,9 @@ int sendPacketToDataLinkLayer(PACKET* p, FILE* f)
             return -1;
         }
         count++;
-    } while (!writtenToFile);
+    } while (writtenToFile < 0);
+
+    fclose(file);
 
     return writtenToFile;
 }
@@ -322,7 +318,7 @@ int genRemotePacketResponse(PACKET* p)
             if (((p->data_packet.type << 4) >> 5)/*p(s)*/ == (rand()%8))
             {
                 // Calcul du p(r) = (p(s)+1)%8 sur 3 bits acoté à gauche
-                p->data_packet.type = (((((p->data_packet.type << 4) >> 4) + 0x02) << 4) >> 5)<<5;
+                p->data_packet.type = ((((((p->data_packet.type << 4) >> 4) + 0x02) << 4) >> 5)<<5);
                 // Ajout du masque de bits sur les 5 bits à droite du p(r)
                 p->data_packet.type += 0x09; // == 01001
                 
@@ -333,7 +329,7 @@ int genRemotePacketResponse(PACKET* p)
             // Émission d'un paquet d'acquitement positif
             else {
                 // Calcul du p(r) = (p(s)+1)%8 sur 3 bits acoté à gauche
-                p->data_packet.type = (((((p->data_packet.type << 4) >> 4) + 0x02) << 4) >> 5)<<5;
+                p->data_packet.type = ((((((p->data_packet.type << 4) >> 4) + 0x02) << 4) >> 5)<<5);
                 // Ajout du masque de bits sur les 5 bits à droite du p(r)
                 p->data_packet.type += 0x01; // == 00001
                 
@@ -347,3 +343,4 @@ int genRemotePacketResponse(PACKET* p)
     // Aucune réponse
     return 0;
 }
+

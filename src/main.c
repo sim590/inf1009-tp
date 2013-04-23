@@ -1,4 +1,8 @@
 //-------------------------------------------------------
+// Fichier: main.c      Auteur(s): Simon DÉSAULNIERS
+//
+// Date 2013-04-12
+//-------------------------------------------------------
 // Fichier contenant le point d'entrée du programme.
 //-------------------------------------------------------
 #include <main.h>
@@ -22,6 +26,7 @@ int main()
     }
     
     if (DEBUG) printf("MAIN:\nLes fd sont:\n(%i,%i),(%i,%i)",transToNet_pipe[0],transToNet_pipe[1],netToTrans_pipe[0],netToTrans_pipe[1]);
+    
     pid_t pid = fork();
 
     if (pid == -1)
@@ -31,8 +36,8 @@ int main()
     }
     else if (pid == 0) {
         // Fermeture des côté du tuyaux non-utiles
-        //close(transToNet_pipe[0]);
-        //close(netToTrans_pipe[1]);
+        close(transToNet_pipe[0]);
+        close(netToTrans_pipe[1]);
 
         // Préparation des arguments pour le processus
         // entité transport
@@ -45,7 +50,8 @@ int main()
         execv(TRANS_PATH,argv);
         exit(EXIT_FAILURE); // Acessible que si exec fail
     }
-
+    
+    sleep(1);
     pid = fork();
 
     if (pid == -1)
@@ -70,8 +76,8 @@ int main()
     }
 
     // On ferme les file descriptors qui ne nous sont pas utiles
-    //for (i = 0; i < 2; i++) close(transToNet_pipe[i%2]);
-    //for (i = 0; i < 2; i++) close(netToTrans_pipe[i%2]);
+    for (i = 0; i < 2; i++) close(transToNet_pipe[i%2]);
+    for (i = 0; i < 2; i++) close(netToTrans_pipe[i%2]);
     
     return 0;    
 }
@@ -83,10 +89,10 @@ int main()
 char** makeArgArray(int height, int length)
 {
     int i;
-    char** array = malloc(sizeof(char*)*height);
+    char** array = (char**) malloc(sizeof(char*)*height);
 
     for (i = 0; i < height-1; i++) {
-        array[i] = malloc(sizeof(char)*length);
+        array[i] = (char*) malloc(sizeof(char)*length);
     }
     array[height-1] = (char*) NULL;
 
