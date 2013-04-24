@@ -1,0 +1,169 @@
+%-------------------------------------------------------------
+% Fichier: specifications.tex    Auteur(s): Simon DÉSAULNIERS
+% Date: 2013-04-24
+%-------------------------------------------------------------
+% Document de spécification du code pour le projet de
+% session du cours INF1009 à l'Université du Québec à
+% Trois-Rivières
+%-------------------------------------------------------------
+\documentclass[11pt,french]{article}
+
+\usepackage[frenchb]{babel}
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+
+\usepackage{graphicx}
+
+\usepackage{hyperref}
+\hypersetup{hidelinks}
+
+% Style des pages
+\usepackage{fancyhdr}
+\pagestyle{fancy}
+\lhead{Travail de Session}
+
+% Caractères mathématiques
+\usepackage{amssymb}
+
+\usepackage{color}
+
+% Affichage de code source
+\usepackage{listings}
+\definecolor{dkgreen}{rgb}{0,0.6,0}
+\definecolor{gray}{rgb}{0.5,0.5,0.5}
+\definecolor{mauve}{rgb}{0.58,0,0.82}
+
+\lstset{ %
+backgroundcolor=\color{white},   % choose the background color; you must add \usepackage{color} or \usepackage{xcolor}
+basicstyle=\footnotesize,        % the size of the fonts that are used for the code
+breakatwhitespace=false,         % sets if automatic breaks should only happen at whitespace
+breaklines=true,                 % sets automatic line breaking
+captionpos=b,                    % sets the caption-position to bottom
+commentstyle=\color{green},    % comment style
+deletekeywords={...},            % if you want to delete keywords from the given language
+escapeinside={\%*}{*)},          % if you want to add LaTeX within your code
+extendedchars=true,              % lets you use non-ASCII characters; for 8-bits encodings only, does not work with UTF-8
+frame=single,                    % adds a frame around the code
+keywordstyle=\color{blue},       % keyword style
+morekeywords={*,...},            % if you want to add more keywords to the set
+numbers=left,                    % where to put the line-numbers; possible values are (none, left, right)
+numbersep=5pt,                   % how far the line-numbers are from the code
+numberstyle=\tiny\color{gray}, % the style that is used for the line-numbers
+rulecolor=\color{black},         % if not set, the frame-color may be changed on line-breaks within not-black text (e.g. comments (green here))
+showspaces=false,                % show spaces everywhere adding particular underscores; it overrides 'showstringspaces'
+showstringspaces=false,          % underline spaces within strings only
+showtabs=false,                  % show tabs within strings adding particular underscores
+stepnumber=2,                    % the step between two line-numbers. If it's 1, each line will be numbered
+stringstyle=\color{mauve},     % string literal style
+tabsize=2,                       % sets default tabsize to 2 spaces
+xleftmargin=\parindent,
+title=\lstname                   % show the filename of files included with \lstinputlisting; also try caption instead of title
+}
+
+
+% Style des en-têtes de section
+\usepackage{sectsty}
+%\sectionfont{\sectionrule{0ex}{0pt}{-1ex}{0.5pt}}
+
+\newcommand{\HRule}{\rule{\linewidth}{0.5mm}}
+
+\begin{document}
+    % PAGE TITRE
+    \begin{titlepage}
+        \begin{center}
+    
+            \includegraphics[height=3cm]{./aux/network.png}
+            \\[3cm]
+            
+            \textsc{\LARGE Réseaux d'ordinateurs I}
+            \\[0.2cm]
+            \textsc{\Large INF1009}
+            \\[2cm]
+            \HRule \\[0.5cm]
+            {\huge \bfseries Travail de Session}
+            \HRule \\[2cm]
+            Par\\
+            Simon Désaulniers
+
+            \vfill
+            2013-04-24\\
+            Université du Québec à Trois-Rivières
+            \thispagestyle{empty}
+        \end{center}
+    \end{titlepage}
+    \newpage
+
+    % TABLE DES MATIÈRES
+    \pagenumbering{roman}
+    \setcounter{page}{1}
+    \tableofcontents
+    \newpage
+
+    % CORPS DU RAPPORT
+    \pagenumbering{arabic}
+    \setcounter{page}{1}
+    
+    \section*{Introduction} % (fold)
+    \label{sec:intro}
+        Le document présent est destiné à la meilleure compréhension de la conception
+        du programme réalisé pour le cours \emph{INF1009}. Les différents fichiers sources
+        \footnote{Le code source est disponible à l'adresse {\color{blue}\href{https://github.com/sim590/inf1009-tp}{https://github.com/sim590/inf1009-tp}}}
+        seront détaillés afin d'expliquer les choix qui ont été faits lors de l'écriture
+        de ceux-ci.\\
+
+        Le projet est réalisé suivant les spécifications de l'éconcé en annexe et donc demeure
+        fonctionnel dans un environnement utilisant la norme \emph{POSIX}\footnote{Comme les
+        différentes distributions \emph{GNU/Linux} (Debian, Ubuntu, Linux Mint, etc.)}.
+    % section intro (end)
+    
+    \section{Makefile} % (fold)
+    \label{sec:makefile}
+        Le fichier nommé \emph{Makefile} permet de compiler\footnote{La compilation utilise le programme
+        gcc (GNU C/C++ Compiler).} les différents fichiers sources
+        à l'aide d'une seule commande entrée au terminal: {\bf make all}. Lorsque cette commande
+        est envoyée au terminal et que répertoire de travail est le même que le fichier \emph{Makefile},
+        la règle \emph{all} est appellée.
+        \lstset{language=make}
+        \begin{lstlisting}
+all: main transport network
+        \end{lstlisting}
+        Celle-ci appelle ses dépendences et ainsi compile tous les 
+        fichiers sources.
+        %\lstinputlisting{../Makefile}
+
+        Une fois les fichiers compilés et liés dans 3 objets binaires
+        {\bf inf1009-tp}, {\bf transport-entity} et {\bf network-entity},
+        il est possible de lancer le programme en appellant\footnote{Il est recommandé de
+        démarrer le programme à l'aide d'un terminal afin d'avoir différentes informations sur
+        la sortie standard.} le programme \emph{inf1009-tp}.
+        Bien-sûr, le programme nécessite le fichier \emph{S\_LEC} afin d'obtenir des informations et
+        ainsi produire les résultats attendus dans les autres fichiers \emph{S\_ECR}, \emph{L\_LEC}
+        et \emph{L\_ECR}.\\
+
+        Le script permet aussi de nettoyer le répertoire des fichiers sources et des fichiers binaires
+        en utilisant respectivement la commande {\bf make clean} et {\bf make cleanbin}
+    % section makefile (end)
+    
+    \section{inf1009-tp} % (fold)
+    \label{sec:inf1009-tp}
+        \lstset{language=c}
+        Ce programme est comilé à l'aide du fichier \emph{main.c}. C'est le programme qui appelle
+        les deux processus ET\footnote{Entité Transport} et ER\footnote{Entité Réseau}. Il nécessite
+        que les deux programmes soient dans le même répertoire.
+        
+        \subsection{Fichiers d'entêtes} % (fold)
+        \label{sub:fich-entete}
+            
+            \subsubsection{main.h} % (fold)
+            \label{ssub:main.h}
+                Le fichier \emph{main.h} contient les appels aux librairies nécessaires ainsi que la déclaration
+                d'une fonction à laquelle on fait appel dans le fichier \emph{main.c}.
+            % subsubsection main.h (end)
+        % subsection fich-entete (end)
+        \subsection{Fichiers compilés} % (fold)
+        \label{sub:fich-compiles-inf1009-tp}
+        
+        % subsection fich-compiles (end)
+    % section inf1009-tp (end)
+
+end{document}
