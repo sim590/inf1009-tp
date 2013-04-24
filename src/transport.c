@@ -1,8 +1,8 @@
 //-------------------------------------------------------
-// Fichier: transport.c    Auteur(s): Simon DÉSAULNIERS
+// Fichier: transport.c    Auteur(s): Simon DESAULNIERS
 // Date: 2013-04-12
 //-------------------------------------------------------
-// Routines que la couche transport a à accomplir.
+// Routines que la couche transport a a accomplir.
 //-------------------------------------------------------
 
 #include <transport.h>
@@ -11,7 +11,7 @@ int transToNet_pipe,netToTrans_pipe;
 Connection* first_con_node = NULL;
 Connection* last_con_node = NULL;
 
-// Point d'entrée dans le programme
+// Point d'entree dans le programme
 int main(int argc,char** argv)
 {
     FILE* transaction_file = fopen(S_LEC,"a+");
@@ -27,8 +27,8 @@ int main(int argc,char** argv)
     Connection* connection;
     PRIM_PACKET p;
 
-    // Récupération des références au tuyaux
-    // (respectivement l'écriture et l'écoute)
+    // Recuperation des references au tuyaux
+    // (respectivement l'ecriture et l'ecoute)
     transToNet_pipe = atoi(argv[1]); netToTrans_pipe = atoi(argv[2]);
     
     // On s'assure que les file descriptors sont en mode 0_NONBLOCK
@@ -64,8 +64,8 @@ int main(int argc,char** argv)
     //POUR TOUS LES CONNEXION
         //SUPPRIMMER_CONNEXION
     
-    // Lecture du fichier S_LEC, envoie des requêtes et écoute
-    // de la réponse.
+    // Lecture du fichier S_LEC, envoie des requetes et ecoute
+    // de la reponse.
     while(fgets(line_buffer, 256, transaction_file))
     {
         connection = (Connection*) findConnection(line_buffer[0]);
@@ -76,17 +76,17 @@ int main(int argc,char** argv)
             // Engager une connexion
             connection = (Connection*) add_connection(line_buffer[0],NULL,NULL);
 
-            // Créaction d'un paquet contenant la primitive N_CONNECT_req
+            // Creaction d'un paquet contenant la primitive N_CONNECT_req
             p.prim = N_CONNECT_req;
             
-            // Génère un seed pour une valeur pseudo-aléatoire
-            // différente par rand()
+            // Genere un seed pour une valeur pseudo-aleatoire
+            // differente par rand()
             srand(time(NULL));
-            p.con_prim_packet.src_addr = (unsigned char) rand();  // Adresses aléatoires pour la source
+            p.con_prim_packet.src_addr = (unsigned char) rand();  // Adresses aleatoires pour la source
             p.con_prim_packet.dest_addr = (unsigned char) rand(); // et la destination..
             p.con_prim_packet.con_number = connection->tcon.con_number;
             
-            // Envoie d'un paquet et écoute de la réponse de ER
+            // Envoie d'un paquet et ecoute de la reponse de ER
             writePrimPacketToStdOut(&p,I_AM);
             if(sendPacketToInterface(&p,transToNet_pipe) == -1)
                 return -1;
@@ -94,13 +94,13 @@ int main(int argc,char** argv)
                 return -1;
             
             char result[256];
-            // Action en conséquence
+            // Action en consequence
             switch(p.prim)
             {
                 // CON_PRIM_PACKET reçu => N_CONNECT_conf
                 case N_CONNECT_conf:
-                    // Écriture des résutlats dans S_ECR
-                    sprintf(result,"Réception de la primitive N_CONNECT.conf sur la connection %c\n", connection->tcon.con_number);
+                    // Ecriture des resutlats dans S_ECR
+                    sprintf(result,"Reception de la primitive N_CONNECT.conf sur la connection %c\n", connection->tcon.con_number);
                     writeResults(result,S_ECR);
                     
                     // Confirmation de la connexion
@@ -113,15 +113,15 @@ int main(int argc,char** argv)
                     strcpy(p.data_prim_packet.transaction,message);
                     p.data_prim_packet.con_number = connection->tcon.con_number;
                     
-                    // Envoie du paquet à l'ER
+                    // Envoie du paquet a l'ER
                     writePrimPacketToStdOut(&p,I_AM);
                     if(sendPacketToInterface(&p,transToNet_pipe) == -1)
                         return -1;
                     break;
                 // REL_PRIM_PACKET reçu => N_DISCONNECT_ind
                 case N_DISCONNECT_ind:
-                    // Écriture des résultats dans S_ECR
-                    sprintf(result,"Réception de la primitive N_DISCONNECT.ind pour la connexion %c\n",connection->tcon.con_number);
+                    // Ecriture des resultats dans S_ECR
+                    sprintf(result,"Reception de la primitive N_DISCONNECT.ind pour la connexion %c\n",connection->tcon.con_number);
                     writeResults(result,S_ECR);
                     
                     // Retrait de la connexion de la table de connexions
@@ -166,10 +166,10 @@ int main(int argc,char** argv)
 
 //--------------------------------------
 // Trouver le pointeur vers le premier
-// caractère du message
+// caractere du message
 // Retourne:
 // -1: aucun message..
-// j: Le nombre de caractères dans le message
+// j: Le nombre de caracteres dans le message
 //--------------------------------------
 int getMessageFromBuffer(char buffer[], char message[])
 {
@@ -190,8 +190,8 @@ int getMessageFromBuffer(char buffer[], char message[])
 }
 
 //---------------------------------------
-// Écrit les résultats dans le fichier
-// spécifié
+// Ecrit les resultats dans le fichier
+// specifie
 //---------------------------------------
 int writeResults(char* results, char* file_path)
 {
@@ -199,7 +199,7 @@ int writeResults(char* results, char* file_path)
     int writtenToFile;
     
     if((writtenToFile = fprintf(file,results)) < 1) {
-        fprintf(stderr,"Impossible d'écrire dans le fichier %s",file_path);
+        fprintf(stderr,"Impossible d'ecrire dans le fichier %s",file_path);
         return -1;
     }
     

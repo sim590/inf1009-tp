@@ -1,17 +1,17 @@
 //-------------------------------------------------------
-// Fichier: transNnet.c    Auteur(s): Simon DÉSAULNIERS
+// Fichier: transNnet.c    Auteur(s): Simon DESAULNIERS
 // Date: 2013-04-20
 //-------------------------------------------------------
-// Interface entre la couche réseau et transport.
+// Interface entre la couche reseau et transport.
 //-------------------------------------------------------
 
 #include <transNnet.h>
 
 
 //-----------------------------------------
-// Écoute la réponse de la couche désirée
+// Ecoute la reponse de la couche desiree
 // -1: erreur..
-// redFromPipe: Nombre de caractères
+// redFromPipe: Nombre de caracteres
 // lus du pipe
 //-----------------------------------------
 int getPacketFromInterface(PRIM_PACKET* p, int fd)
@@ -26,7 +26,7 @@ int getPacketFromInterface(PRIM_PACKET* p, int fd)
             sleep(1);
         }
         else if (count > MAX_WAIT_TIME) {
-            fprintf(stderr, "Aucune nouvelle requête après %i secondes d'écoute du tuyau de descripteur de fichier %i..\n",MAX_WAIT_TIME,fd);
+            fprintf(stderr, "Aucune nouvelle requete apres %i secondes d'ecoute du tuyau de descripteur de fichier %i..\n",MAX_WAIT_TIME,fd);
             return -1;
         }
         count++;
@@ -37,7 +37,7 @@ int getPacketFromInterface(PRIM_PACKET* p, int fd)
     p->prim = buffer[0];
     switch(p->prim)
     {
-        // Paquet d'établissement de connexion
+        // Paquet d'etablissement de connexion
         case N_CONNECT_req:
         case N_CONNECT_ind:
         case N_CONNECT_resp:
@@ -46,13 +46,13 @@ int getPacketFromInterface(PRIM_PACKET* p, int fd)
             p->con_prim_packet.dest_addr = buffer[2];
             p->con_prim_packet.con_number = buffer[3];
             break;
-        // Paquet de transfert de données
+        // Paquet de transfert de donnees
         case N_DATA_req:
         case N_DATA_ind:
-            p->data_prim_packet.con_number = buffer[1]; // 6e octet.. On saute le \0 après les 4 premiers octets
+            p->data_prim_packet.con_number = buffer[1]; // 6e octet.. On saute le \0 apres les 4 premiers octets
             strcpy(p->data_prim_packet.transaction,buffer+2);
             break;
-        // Paquet de libération de connexion
+        // Paquet de liberation de connexion
         case N_DISCONNECT_req:
         case N_DISCONNECT_ind:
             p->rel_prim_packet.con_number = buffer[1];
@@ -63,11 +63,11 @@ int getPacketFromInterface(PRIM_PACKET* p, int fd)
 }
 
 //-----------------------------------------
-// Envoie d'un paquet à la couche désirée
+// Envoie d'un paquet a la couche desiree
 // Retourne:
 // -1: erreur..
-// writtenToPipe: Nombre de caractères
-// écrits dans le pipe
+// writtenToPipe: Nombre de caracteres
+// ecrits dans le pipe
 //-----------------------------------------
 int sendPacketToInterface(PRIM_PACKET* p, int fd)
 {
@@ -78,7 +78,7 @@ int sendPacketToInterface(PRIM_PACKET* p, int fd)
     buffer[0] = (char) p->prim;
     switch(p->prim)
     {
-        // Paquet d'établissement de connexion
+        // Paquet d'etablissement de connexion
         case N_CONNECT_req:
         case N_CONNECT_ind:
         case N_CONNECT_resp:
@@ -87,13 +87,13 @@ int sendPacketToInterface(PRIM_PACKET* p, int fd)
             buffer[2] = p->con_prim_packet.dest_addr;
             buffer[3] = p->con_prim_packet.con_number;
             break;
-        // Paquet de transfert de données
+        // Paquet de transfert de donnees
         case N_DATA_req:
         case N_DATA_ind:
             buffer[1] = p->data_prim_packet.con_number;
             strcpy(buffer+2,p->data_prim_packet.transaction);
             break;
-        // Paquet de libération de connexion
+        // Paquet de liberation de connexion
         case N_DISCONNECT_req:
         case N_DISCONNECT_ind:
             buffer[1] = p->rel_prim_packet.con_number;
@@ -105,7 +105,7 @@ int sendPacketToInterface(PRIM_PACKET* p, int fd)
         writtenToPipe = write(fd,buffer,sizeof(buffer));
     
         if (count > 3) {
-            fprintf(stderr, "Erreur: Impossible d'écrire dans le tuyau de descripteur de fichier %i\n",fd);
+            fprintf(stderr, "Erreur: Impossible d'ecrire dans le tuyau de descripteur de fichier %i\n",fd);
             return -1;
         }
         count++;
@@ -147,8 +147,8 @@ Connection* findConnection(char con_number)
 }
 
 //---------------------------------------
-// Ajout d'un noeud de connexion à la
-// liste chaînée de connexions
+// Ajout d'un noeud de connexion a la
+// liste chaînee de connexions
 //---------------------------------------
 Connection* add_connection(char con_number, char* src_addr, char* dest_addr)
 {
@@ -175,7 +175,7 @@ Connection* add_connection(char con_number, char* src_addr, char* dest_addr)
 
 //--------------------------------
 // Suppression d'un noeud de
-// la liste chaînée de connexions
+// la liste chaînee de connexions
 //--------------------------------
 void remove_connection(char con_number)
 {
@@ -183,7 +183,7 @@ void remove_connection(char con_number)
 
     while (node != NULL) {
         if (node->ncon.con_number == con_number) {
-            // Le seul élément de la liste
+            // Le seul element de la liste
             if (node == first_con_node && node == last_con_node) {
                 free(node);
                 first_con_node = last_con_node = NULL;
@@ -217,8 +217,8 @@ void remove_connection(char con_number)
 }
 
 //-----------------------------------------------
-// Écrit sur la sortie standard les informations 
-// relatives au paquet envoyé à la couche 
+// Ecrit sur la sortie standard les informations 
+// relatives au paquet envoye a la couche 
 // correspondante.
 //-----------------------------------------------
 void writePrimPacketToStdOut(PRIM_PACKET* p, char* WHO_AM_I)

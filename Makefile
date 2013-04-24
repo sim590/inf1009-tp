@@ -1,5 +1,5 @@
 #--------------------------------------------------
-# Fichier: Makefile 	Auteur: Simon DÉSAULNIERS
+# Fichier: Makefile 	Auteur: Simon DESAULNIERS
 # Projet: [INF1009] Travail de session
 #
 #--------------------------------------------------

@@ -1,9 +1,9 @@
 //---------------------------------------------------------
-// Fichier: transNnet.h    Auteur(s): Simon DÉSAULNIERS
+// Fichier: transNnet.h    Auteur(s): Simon DESAULNIERS
 // Date: 2013-04-12
 //---------------------------------------------------------
-// Fichier d'entête décrivant la communication entre la
-// couche transport et la couche réseau.
+// Fichier d'entete decrivant la communication entre la
+// couche transport et la couche reseau.
 //---------------------------------------------------------
 
 #ifndef TRANSNNET_MDHCQJ5S
@@ -22,26 +22,26 @@
 
 //-------------------------
 // Primitives lors de la
-// de l'échange entre la
+// de l'echange entre la
 // couche ET et ER
 //-------------------------
 typedef enum {
-    // Paquet d'établissement de connexion
+    // Paquet d'etablissement de connexion
     N_CONNECT_req,
     N_CONNECT_ind,
     N_CONNECT_resp,
     N_CONNECT_conf,
-    // Paquet de transfert de données
+    // Paquet de transfert de donnees
     N_DATA_req,
     N_DATA_ind,
-    // Paquet de libération de connexion
+    // Paquet de liberation de connexion
     N_DISCONNECT_req,
     N_DISCONNECT_ind
 } PRIMITIVE;
 
 //-------------------------------------------
 // Paquets de communication entre la couche
-// transport et réseau
+// transport et reseau
 //-------------------------------------------
 typedef struct _CON_PRIM_PACKET {
     PRIMITIVE prim;
@@ -63,7 +63,7 @@ typedef struct _REL_PRIM_PACKET {
 
 //----------------------------
 // Paquet pour communication
-// transport-réseau
+// transport-reseau
 //----------------------------
 typedef union {
     PRIMITIVE prim;
@@ -84,7 +84,7 @@ typedef struct _TRANS_CON {
 
 //---------------------------------
 // Noeud de la table de connexions
-// de la couche réseau
+// de la couche reseau
 //---------------------------------
 typedef struct _NET_CON {
     union _Connection* next;
@@ -102,7 +102,7 @@ typedef union _Connection {
 Connection* first_con_node;
 Connection* last_con_node;
 
-// Fonctions décrivant l'interface entre les couches
+// Fonctions decrivant l'interface entre les couches
 int getPacketFromInterface(PRIM_PACKET*, int);
 int sendPacketToInterface(PRIM_PACKET*,int);
 void deleteAllConnections();

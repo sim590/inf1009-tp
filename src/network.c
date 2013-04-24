@@ -1,8 +1,8 @@
 //-------------------------------------------------------
-// Fichier: network.c    Auteur(s): Simon DÉSAULNIERS
+// Fichier: network.c    Auteur(s): Simon DESAULNIERS
 // Date: 2013-04-12
 //-------------------------------------------------------
-// Routines de la couche réseau.
+// Routines de la couche reseau.
 //-------------------------------------------------------
 
 #include <network.h>
@@ -12,7 +12,7 @@ Connection* last_con_node = NULL;
 
 int transToNet_pipe,netToTrans_pipe;
 
-// Point d'entrée dans le programme
+// Point d'entree dans le programme
 int main(int argc, char** argv)
 {
     int i=0, count = 0, flags,flag_response, length, response;
@@ -39,33 +39,33 @@ int main(int argc, char** argv)
 
                 //CONSTRUIRE_CONNECTION_PACKET
     
-                //ÉCRIRE_CONNECTION_PACKET(L_ECR)
+                //ECRIRE_CONNECTION_PACKET(L_ECR)
     
                 //GEN_REPONSE_B
     
-                //ÉCRIRE_RÉPONSE_B(L_LEC)
+                //ECRIRE_REPONSE_B(L_LEC)
                 //SI REPONSE_B_OUI
-                    //RÉPONDRE_ET_OUI_B
+                    //REPONDRE_ET_OUI_B
                 //SINON
-                    //RÉPONDRE_ET_NON_B
+                    //REPONDRE_ET_NON_B
             //SINON
-                //RÉPONDRE_ET_NON
+                //REPONDRE_ET_NON
         //SINON SI N_DATA_REQ
             //SEGMENTER_MESSAGE
             //POUR TOUT SEGMENTS
-                //ÉCRIRE_DATA_PACKET(L_ECR)
-                //GEN_RÉPONSE_B
+                //ECRIRE_DATA_PACKET(L_ECR)
+                //GEN_REPONSE_B
                 
-                //ÉCRIRE_RÉPONSE_B(L_LEC)
-                //SI AUCUNE_RÉPONSE OU RÉPONSE_NEGATIVE
-                    //ÉCRIRE_DATA_PACKET(L_ECR)
-                    //GEN_RÉPONSE_B
+                //ECRIRE_REPONSE_B(L_LEC)
+                //SI AUCUNE_REPONSE OU REPONSE_NEGATIVE
+                    //ECRIRE_DATA_PACKET(L_ECR)
+                    //GEN_REPONSE_B
                     
-                    //ÉCRIRE_RÉPONSE_B
+                    //ECRIRE_REPONSE_B
                 //FIN SI
             //FIN POUR TOUT
         //SINON SI N_DISCONNECT_REQ
-            //ÉCRIRE_REL_PACKET(L_ECR)
+            //ECRIRE_REL_PACKET(L_ECR)
         //FIN SI
     //FIN TANT QUE
    
@@ -83,7 +83,7 @@ int main(int argc, char** argv)
                     break;
                 }
 
-                // Acceptation au niveau de l'entité réseau
+                // Acceptation au niveau de l'entite reseau
                 connection = add_connection(p.con_prim_packet.con_number,&p.con_prim_packet.src_addr,&p.con_prim_packet.dest_addr);
 
                 // Construction d'un paquet pour envoie sur
@@ -94,14 +94,14 @@ int main(int argc, char** argv)
                 packet.con_packet.src_addr = p.con_prim_packet.src_addr;
                 packet.con_packet.dest_addr = p.con_prim_packet.dest_addr;
 
-                // Envoie à la couche liaison
+                // Envoie a la couche liaison
                 if (sendPacketToDataLinkLayer(&packet,L_ECR) == -1)
                     return -1;
 
-                // Réponse du distant
+                // Reponse du distant
                 flag_response = genRemotePacketResponse(&packet);
 
-                // Aucune réponse ou refus
+                // Aucune reponse ou refus
                 if (!flag_response || packet.con_packet.con_packet_type == REL_ind) {
                     // Abandon
                     p.prim = N_DISCONNECT_ind;
@@ -111,7 +111,7 @@ int main(int argc, char** argv)
                     break;
                 }
                 
-                // Écriture de la réponse du distant dans L_LEC
+                // Ecriture de la reponse du distant dans L_LEC
                 sendPacketToDataLinkLayer(&packet,L_LEC);
                 
                 // Confirmation de la connexion
@@ -148,28 +148,28 @@ int main(int argc, char** argv)
                     // Copie de 128 octets du message vers un segment
                     strncpy(packet.data_packet.segm_data,p.data_prim_packet.transaction,128);
 
-                    // Envoie à la couche liaison
+                    // Envoie a la couche liaison
                     sendPacketToDataLinkLayer(&packet,L_ECR);
                     
-                    // Sauvegarde du paquet pour la phase de la réponse du distant
+                    // Sauvegarde du paquet pour la phase de la reponse du distant
                     // car on doit envoyer deux fois maximum
                     sndPacket = packet;
                     
-                    // Aucune réponse ou réponse négative
+                    // Aucune reponse ou reponse negative
                     if ((response = genRemotePacketResponse(&sndPacket)) <= 0) {
                         if (response < 0)
-                            // Écrire la réponse dans L_LEC
+                            // Ecrire la reponse dans L_LEC
                             sendPacketToDataLinkLayer(&sndPacket,L_LEC);
 
-                        // Deuxième envoie
+                        // Deuxieme envoie
                         sendPacketToDataLinkLayer(&packet,L_ECR);
                         
-                        // Réception d'un acquitement positif ou négatif
+                        // Reception d'un acquitement positif ou negatif
                         if(genRemotePacketResponse(&packet)) {
                             sendPacketToDataLinkLayer(&packet,L_LEC);
                         }
                     }
-                    // Réponse positive
+                    // Reponse positive
                     else
                         sendPacketToDataLinkLayer(&sndPacket,L_LEC);
 
@@ -181,14 +181,14 @@ int main(int argc, char** argv)
             case N_DISCONNECT_req:
                 connection = findConnection(p.rel_prim_packet.con_number);
                 
-                // Construction d'un paquet de libération
+                // Construction d'un paquet de liberation
                 packet.packet_type = 2; // RELEASE_PACKET
                 packet.rel_packet.type = 0x13;
                 packet.rel_packet.con_number = p.rel_prim_packet.con_number;
                 packet.rel_packet.src_addr = connection->ncon.src_addr;
                 packet.rel_packet.dest_addr = connection->ncon.dest_addr;
                 
-                // Envoie d'un paquet d'indication de libération
+                // Envoie d'un paquet d'indication de liberation
                 sendPacketToDataLinkLayer(&packet,L_ECR);
                 
                 // Retrait de de la connexion de la table de connexions
@@ -201,7 +201,7 @@ int main(int argc, char** argv)
 }
 
 //----------------------------------
-// Envoie d'un paquet à la couche
+// Envoie d'un paquet a la couche
 // liaison
 //----------------------------------
 int sendPacketToDataLinkLayer(PACKET* p, char* file_path)
@@ -210,7 +210,7 @@ int sendPacketToDataLinkLayer(PACKET* p, char* file_path)
     int i, writtenToFile, count = 0;
     FILE* file;
 
-    // Construction d'un buffer à partir d'un PACKET
+    // Construction d'un buffer a partir d'un PACKET
     switch(p->packet_type)
     {
         // CONNECTION_PACKET
@@ -260,7 +260,7 @@ int sendPacketToDataLinkLayer(PACKET* p, char* file_path)
             sleep(1);
         }
         else if (count > MAX_WAIT_TIME) {
-            fprintf(stderr, "Erreur: Impossible d'écrire à la couche liaison après %i secondes.\n",MAX_WAIT_TIME);
+            fprintf(stderr, "Erreur: Impossible d'ecrire a la couche liaison apres %i secondes.\n",MAX_WAIT_TIME);
             return -1;
         }
         count++;
@@ -272,15 +272,15 @@ int sendPacketToDataLinkLayer(PACKET* p, char* file_path)
 }
 
 //-----------------------------------------
-// Génère la réponse du système distant
+// Genere la reponse du systeme distant
 // 
 // Retourne:
-//  0: Aucune réponse du distant
+//  0: Aucune reponse du distant
 //  CONNECTION)
-//      1: Réponse écrite dans PACKET* p
+//      1: Reponse ecrite dans PACKET* p
 //  DATA)
 //      1: Acquitement positif
-//      -1: Acquitement négatif
+//      -1: Acquitement negatif
 //-----------------------------------------
 int genRemotePacketResponse(PACKET* p)
 {
@@ -288,7 +288,7 @@ int genRemotePacketResponse(PACKET* p)
     {
         // CONNECTION_PACKET => CON_req
         case 0:
-                // Aucune réponse de la part du distant
+                // Aucune reponse de la part du distant
                 if (p->con_packet.src_addr%19 == 0)
                     break;
                 
@@ -306,42 +306,42 @@ int genRemotePacketResponse(PACKET* p)
             break;
         // DATA_PACKET
         case 1:
-            // Émission d'aucun paquet d'acquitement
+            // Emission d'aucun paquet d'acquitement
             if (findConnection(p->data_packet.con_number)->ncon.src_addr%15 == 0)
                 break;
-            // Émission d'un paquet d'acquitement négatif
+            // Emission d'un paquet d'acquitement negatif
             if (((p->data_packet.type << 4) >> 5)/*p(s)*/ == (rand()%8))
             {
-                // Calcul du p(r) = (p(s)+1)%8 sur 3 bits acoté à gauche
+                // Calcul du p(r) = (p(s)+1)%8 sur 3 bits acote a gauche
                 p->data_packet.type = ((((((p->data_packet.type << 4) >> 4) + 0x02) << 4) >> 5)<<5);
-                // Ajout du masque de bits sur les 5 bits à droite du p(r)
+                // Ajout du masque de bits sur les 5 bits a droite du p(r)
                 p->data_packet.type += 0x09; // == 01001
                 
-                // On efface le message parce qu'il n'est pas nécessaire
+                // On efface le message parce qu'il n'est pas necessaire
                 memset(p->data_packet.segm_data,0,sizeof(p->data_packet.segm_data)-1);
                 return -1;
             }
-            // Émission d'un paquet d'acquitement positif
+            // Emission d'un paquet d'acquitement positif
             else {
-                // Calcul du p(r) = (p(s)+1)%8 sur 3 bits acoté à gauche
+                // Calcul du p(r) = (p(s)+1)%8 sur 3 bits acote a gauche
                 p->data_packet.type = ((((((p->data_packet.type << 4) >> 4) + 0x02) << 4) >> 5)<<5);
-                // Ajout du masque de bits sur les 5 bits à droite du p(r)
+                // Ajout du masque de bits sur les 5 bits a droite du p(r)
                 p->data_packet.type += 0x01; // == 00001
                 
-                // On efface le message parce qu'il n'est pas nécessaire
+                // On efface le message parce qu'il n'est pas necessaire
                 memset(p->data_packet.segm_data,0,sizeof(p->data_packet.segm_data)-1);
                 return 1;
             }
             break;
     }
     
-    // Aucune réponse
+    // Aucune reponse
     return 0;
 }
 
 //------------------------------------
-// Écriture sur la sortie standard
-// des gestes entre la couche réseau 
+// Ecriture sur la sortie standard
+// des gestes entre la couche reseau 
 // et liaison
 //------------------------------------
 void writePacketToStdOut(PACKET* p)

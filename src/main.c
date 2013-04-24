@@ -1,27 +1,27 @@
 //-------------------------------------------------------
-// Fichier: main.c      Auteur(s): Simon DÉSAULNIERS
+// Fichier: main.c      Auteur(s): Simon DESAULNIERS
 //
 // Date 2013-04-12
 //-------------------------------------------------------
-// Fichier contenant le point d'entrée du programme.
+// Fichier contenant le point d'entree du programme.
 //-------------------------------------------------------
 #include <main.h>
 
 
-// Point d'entré dans le programme
+// Point d'entre dans le programme
 int main()
 {
     char** argv;
     int transToNet_pipe[2], netToTrans_pipe[2],i;
 
-    // Création des tuyaux de communication
+    // Creation des tuyaux de communication
     if (pipe(transToNet_pipe) == -1)
     {
-        fprintf(stderr,"Problème lors de la création d'un tuyau!\n");
+        fprintf(stderr,"Probleme lors de la creation d'un tuyau!\n");
         return -1;
     }
     if (pipe(netToTrans_pipe)) {
-        fprintf(stderr,"Problème lors de la création d'un tuyau!\n");
+        fprintf(stderr,"Probleme lors de la creation d'un tuyau!\n");
         return -1;
     }
     
@@ -31,22 +31,22 @@ int main()
 
     if (pid == -1)
     {
-        fprintf(stderr,"Impossible de créer un processus Entité Transport..\n");
+        fprintf(stderr,"Impossible de creer un processus Entite Transport..\n");
         return -1;
     }
     else if (pid == 0) {
-        // Fermeture des côté du tuyaux non-utiles
+        // Fermeture des côte du tuyaux non-utiles
         close(transToNet_pipe[0]);
         close(netToTrans_pipe[1]);
 
-        // Préparation des arguments pour le processus
-        // entité transport
+        // Preparation des arguments pour le processus
+        // entite transport
         argv = makeArgArray(4,TRANS_PATH_LENGTH);
         strcpy(argv[0],TRANS_PATH);
         sprintf(argv[1],"%i",transToNet_pipe[1]);
         sprintf(argv[2],"%i",netToTrans_pipe[0]);
 
-        // Exécute le processus entité transport
+        // Execute le processus entite transport
         execv(TRANS_PATH,argv);
         exit(EXIT_FAILURE); // Acessible que si exec fail
     }
@@ -56,21 +56,21 @@ int main()
 
     if (pid == -1)
     {
-        fprintf(stderr,"Impossible de créer un processus Entité Réseau..\n");
+        fprintf(stderr,"Impossible de creer un processus Entite Reseau..\n");
         return -1;
     }
     else if (pid == 0) {
-        // Fermeture des côté du tuyaux non-utiles
+        // Fermeture des côte du tuyaux non-utiles
         close(netToTrans_pipe[0]);
         close(transToNet_pipe[1]);
-        // Préparation des arguments pour le processus
-        // entité réseau
+        // Preparation des arguments pour le processus
+        // entite reseau
         argv = makeArgArray(4,NET_PATH_LENGTH);
         strcpy(argv[0],NET_PATH);
         sprintf(argv[1],"%i",netToTrans_pipe[1]);
         sprintf(argv[2],"%i",transToNet_pipe[0]);
 
-        // Exécute le processus entité réseau
+        // Execute le processus entite reseau
         execv(NET_PATH,argv);
         exit(EXIT_FAILURE); // Acessible que si exec fail
     }
@@ -84,7 +84,7 @@ int main()
 
 //----------------------------------
 // Remplir un tableau de string
-// pour argument à passer à execv
+// pour argument a passer a execv
 //----------------------------------
 char** makeArgArray(int height, int length)
 {

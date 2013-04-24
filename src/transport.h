@@ -1,8 +1,8 @@
 //---------------------------------------------------------
-// Fichier: transport.h    Auteur(s): Simon DÉSAULNIERs
+// Fichier: transport.h    Auteur(s): Simon DESAULNIERs
 // Date: 2013-04-12
 //---------------------------------------------------------
-// Fichier d'entête décrivant le comportment de la couche
+// Fichier d'entete decrivant le comportment de la couche
 // transport.
 //---------------------------------------------------------
 #ifndef TRANSPORT_4R0LNUHE

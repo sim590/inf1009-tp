@@ -1,9 +1,9 @@
 //---------------------------------------------------------
-// Fichier: main.h    Auteur(s): Simon DÉSAULNIERS
+// Fichier: main.h    Auteur(s): Simon DESAULNIERS
 // Date: 2013-04-12
 //---------------------------------------------------------
-// Fichier d'entête du fichier main.c contenant toutes les
-// importations de librairies nécessaires.
+// Fichier d'entete du fichier main.c contenant toutes les
+// importations de librairies necessaires.
 //---------------------------------------------------------
 #ifndef MAIN_D1ZUXH2C
 
