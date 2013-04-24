@@ -11,7 +11,7 @@
 #define TRANSNNET_MDHCQJ5S
 
 #define DEBUG 1
-#define MAX_WAIT_TIME 3600
+#define MAX_WAIT_TIME 3
 #define MAX_PRIM_PACKET_SIZE 262 // octets
 
 #include <stdio.h>
@@ -59,7 +59,7 @@ typedef struct _DATA_PRIM_PACKET {
 typedef struct _REL_PRIM_PACKET {
     PRIMITIVE prim;
     char con_number;
-    char reason[32];
+    char reason[128];
 } REL_PRIM_PACKET;
 
 //----------------------------

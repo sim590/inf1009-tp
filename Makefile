@@ -17,7 +17,7 @@ main: main.o bindir
 
 main.o: $(SRCDIR)/main.c $(SRCDIR)/main.h
 	cd $(SRCDIR)/; \
-	gcc -g -c main.c -I.
+	gcc -g -c main.c -I. -O0
 
 transport: transport.o transNnet.o bindir
 	cd $(SRCDIR)/; \
@@ -25,7 +25,7 @@ transport: transport.o transNnet.o bindir
 
 transport.o: $(SRCDIR)/transport.c transNnet.h
 	cd $(SRCDIR)/; \
-	gcc -g -c transport.c -I.
+	gcc -g -c transport.c -I. -O0
 
 network: network.o transNnet.o bindir
 	cd $(SRCDIR)/; \
@@ -33,11 +33,11 @@ network: network.o transNnet.o bindir
 
 network.o: $(SRCDIR)/network.c transNnet.h
 	cd $(SRCDIR)/; \
-	gcc -g -c network.c -I.
+	gcc -g -c network.c -I. -O0
 
 transNnet.o: transNnet.h
 	cd $(SRCDIR)/; \
-	gcc -g -c transNnet.c -I.
+	gcc -g -c transNnet.c -I. -O0
 
 transNnet.h: $(SRCDIR)/transNnet.h $(SRCDIR)/transport.h $(SRCDIR)/network.h
 

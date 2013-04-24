@@ -79,6 +79,7 @@ int main(int argc, char** argv)
                     
                     if(sendPacketToInterface(&p,netToTrans_pipe) < 0)
                         return -1;
+                    break;
                 }
 
                 // Acceptation au niveau de l'entité réseau
@@ -145,11 +146,11 @@ int main(int argc, char** argv)
                     strncpy(packet.data_packet.segm_data,p.data_prim_packet.transaction,128);
 
                     // Envoie à la couche liaison
-                    sendPacketToDataLinkLayer(&sndPacket,L_ECR);
+                    sendPacketToDataLinkLayer(&packet,L_ECR);
                     
                     // Sauvegarde du paquet pour la phase de la réponse du distant
                     // car on doit envoyer deux fois maximum
-                    memcpy(&sndPacket,&packet,sizeof(PACKET));
+                    sndPacket = packet;
                     
                     // Aucune réponse ou réponse négative
                     if ((response = genRemotePacketResponse(&sndPacket)) <= 0) {
@@ -287,15 +288,6 @@ int genRemotePacketResponse(PACKET* p)
                 // Aucune réponse de la part du distant
                 if (p->con_packet.src_addr%19 == 0)
                     break;
-                
-                /*
-                 * swap des adresses car simulation de 
-                 * l'envoie dans le sens inverse
-                 */
-                char tmp;
-                tmp = p->con_packet.src_addr;
-                p->con_packet.src_addr = p->con_packet.dest_addr;
-                p->con_packet.dest_addr = tmp;
                 
                 // Refus de connexion de la part du distant
                 if (p->con_packet.src_addr%13 == 0) {

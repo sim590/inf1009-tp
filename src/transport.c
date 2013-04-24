@@ -141,10 +141,10 @@ int main(int argc,char** argv)
     p.prim = N_DISCONNECT_req;
     connection = first_con_node;
     while (connection) {
-        sprintf(p.rel_prim_packet.reason,"Fin des requêtes sur la connexion %i\n",connection->tcon.con_number);
         p.rel_prim_packet.con_number = connection->tcon.con_number;
         if(sendPacketToInterface(&p,transToNet_pipe) == -1)
             return -1;
+        connection = connection->tcon.next;
     }
 
     deleteAllConnections();
