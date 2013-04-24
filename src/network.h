@@ -13,6 +13,7 @@
 #define L_LEC "./L_LEC"
 #define L_ECR "./L_ECR"
 #define MAX_PACKET_SIZE 163
+#define I_AM "ER"
 
 #include <transNnet.h>
 
@@ -97,6 +98,7 @@ typedef union {
 
 int sendPacketToDataLinkLayer(PACKET*,char*);
 int genRemotePacketResponse(PACKET*);
+void writePacketToStdOut(PACKET*);
 
 #endif /* end of include guard: NETWORK_UNQBN59Z */
 

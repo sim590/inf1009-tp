@@ -77,6 +77,7 @@ int main(int argc, char** argv)
                 if (((int)p.con_prim_packet.src_addr)%27 == 0) {
                     p.prim = N_DISCONNECT_ind;
                     
+                    writePrimPacketToStdOut(&p,I_AM);
                     if(sendPacketToInterface(&p,netToTrans_pipe) < 0)
                         return -1;
                     break;
@@ -104,6 +105,7 @@ int main(int argc, char** argv)
                 if (!flag_response || packet.con_packet.con_packet_type == REL_ind) {
                     // Abandon
                     p.prim = N_DISCONNECT_ind;
+                    writePrimPacketToStdOut(&p,I_AM);
                     if(sendPacketToInterface(&p,netToTrans_pipe) == -1)
                         return -1;
                     break;
@@ -114,6 +116,7 @@ int main(int argc, char** argv)
                 
                 // Confirmation de la connexion
                 p.prim = N_CONNECT_conf;
+                writePrimPacketToStdOut(&p,I_AM);
                 if(sendPacketToInterface(&p,netToTrans_pipe) == -1)
                     return -1;
                 connection->ncon.state = 0x01;
@@ -336,3 +339,21 @@ int genRemotePacketResponse(PACKET* p)
     return 0;
 }
 
+//------------------------------------
+// Écriture sur la sortie standard
+// des gestes entre la couche réseau 
+// et liaison
+//------------------------------------
+void writePacketToStdOut(PACKET* p)
+{
+    switch(&p->packet_type)
+    {
+        case 0:
+            printf("%s\n",I_AM);
+            break;
+        case 1:
+            break;
+        case 2:
+            break;
+    }
+}
