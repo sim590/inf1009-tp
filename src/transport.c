@@ -82,8 +82,8 @@ int main(int argc,char** argv)
             // Génère un seed pour une valeur pseudo-aléatoire
             // différente par rand()
             srand(time(NULL));
-            p.con_prim_packet.src_addr = (char) rand();  // Adresses aléatoires pour la source
-            p.con_prim_packet.dest_addr = (char) rand(); // et la destination..
+            p.con_prim_packet.src_addr = (unsigned char) rand();  // Adresses aléatoires pour la source
+            p.con_prim_packet.dest_addr = (unsigned char) rand(); // et la destination..
             p.con_prim_packet.con_number = connection->tcon.con_number;
             
             // Envoie d'un paquet et écoute de la réponse de ER
