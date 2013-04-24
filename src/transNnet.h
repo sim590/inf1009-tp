@@ -10,8 +10,8 @@
 
 #define TRANSNNET_MDHCQJ5S
 
-#define DEBUG 1
-#define MAX_WAIT_TIME 3
+#define DEBUG 0
+#define MAX_WAIT_TIME 10
 #define MAX_PRIM_PACKET_SIZE 262 // octets
 
 #include <stdio.h>
@@ -45,9 +45,9 @@ typedef enum {
 //-------------------------------------------
 typedef struct _CON_PRIM_PACKET {
     PRIMITIVE prim;
+    char con_number;
     char src_addr;
     char dest_addr;
-    char con_number;
 } CON_PRIM_PACKET;
 
 typedef struct _DATA_PRIM_PACKET {
@@ -59,7 +59,6 @@ typedef struct _DATA_PRIM_PACKET {
 typedef struct _REL_PRIM_PACKET {
     PRIMITIVE prim;
     char con_number;
-    char reason[128];
 } REL_PRIM_PACKET;
 
 //----------------------------
@@ -110,7 +109,7 @@ void deleteAllConnections();
 Connection* findConnection(char);
 Connection* add_connection(char,char*,char*);
 void remove_connection(char);
-int whatsConState(char);
+void writePrimPacketToStdOut(PRIM_PACKET*,char*);
 
 
 #endif /* end of include guard: TRANSNNET_MDHCQJ5S */

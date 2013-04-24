@@ -26,7 +26,7 @@ int getPacketFromInterface(PRIM_PACKET* p, int fd)
             sleep(1);
         }
         else if (count > MAX_WAIT_TIME) {
-            fprintf(stderr, "Erreur: Aucune réponse après %i secondes d'écoute du tuyau de descripteur de fichier %i..\n",MAX_WAIT_TIME,fd);
+            fprintf(stderr, "Aucune nouvelle requête après %i secondes d'écoute du tuyau de descripteur de fichier %i..\n",MAX_WAIT_TIME,fd);
             return -1;
         }
         count++;
@@ -56,7 +56,6 @@ int getPacketFromInterface(PRIM_PACKET* p, int fd)
         case N_DISCONNECT_req:
         case N_DISCONNECT_ind:
             p->rel_prim_packet.con_number = buffer[1];
-            strcpy(p->rel_prim_packet.reason,buffer+2);
             break;
     }
    
@@ -98,7 +97,6 @@ int sendPacketToInterface(PRIM_PACKET* p, int fd)
         case N_DISCONNECT_req:
         case N_DISCONNECT_ind:
             buffer[1] = p->rel_prim_packet.con_number;
-            strcpy(buffer+2,p->rel_prim_packet.reason);
             break;
     }
 
@@ -218,25 +216,65 @@ void remove_connection(char con_number)
     }
 }
 
-//-----------------------------------
-// Indique l'état de la connexion:
-// 0: Non-connecté
-// 1: Connecté
-// -1: Non-existante
-//-----------------------------------
-int whatsConState(char con_number)
+//-----------------------------------------------
+// Écrit sur la sortie standard les informations 
+// relatives au paquet envoyé à la couche 
+// correspondante.
+//-----------------------------------------------
+void writePrimPacketToStdOut(PRIM_PACKET* p, char* WHO_AM_I)
 {
-    Connection* node = first_con_node;
-
-    while (node!=NULL) {
-         if (node->ncon.con_number == con_number) {
-            return node->ncon.state; // 0x00 ou 0x01
-         }
+    switch(p->prim)
+    {
+        case N_CONNECT_req:
+            printf("%s: Envoie du paquet --- PRIMITIVE=N_CONNECT_req,con_number=%c,src_addr=%i,\
+dest_addr=%i\n",
+                WHO_AM_I,
+                p->con_prim_packet.con_number,
+                p->con_prim_packet.src_addr,
+                p->con_prim_packet.dest_addr);
+            break;
+        case N_CONNECT_ind:
+            printf("%s: Envoie du paquet --- PRIMITIVE=N_CONNECT_ind,con_number=%c,src_addr=%i,dest_addr=%i\n",
+                WHO_AM_I,
+                p->con_prim_packet.con_number,
+                p->con_prim_packet.src_addr,
+                p->con_prim_packet.dest_addr);
+            break;
+        case N_CONNECT_resp:
+            printf("%s: Envoie du paquet --- PRIMITIVE=N_CONNECT_resp,con_number=%c,src_addr=%i,dest_addr=%i\n",
+                WHO_AM_I,
+                p->con_prim_packet.con_number,
+                p->con_prim_packet.src_addr,
+                p->con_prim_packet.dest_addr);
+            break;
+        case N_CONNECT_conf:
+            printf("%s: Envoie du paquet --- PRIMITIVE=N_CONNECT_conf,con_number=%c,src_addr=%i,dest_addr=%i\n",
+                WHO_AM_I,
+                p->con_prim_packet.con_number,
+                p->con_prim_packet.src_addr,
+                p->con_prim_packet.dest_addr);
+            break;
+        case N_DATA_req:
+            printf("%s: Envoie du paquet --- PRIMITIVE=N_DATA_req,con_number=%c,transaction=%s\n",
+                WHO_AM_I,
+                p->data_prim_packet.con_number,
+                p->data_prim_packet.transaction);
+            break;
+        case N_DATA_ind:
+            printf("%s: Envoie du paquet --- PRIMITIVE=N_DATA_ind,con_number=%c,transaction=%s\n",
+                WHO_AM_I,
+                p->data_prim_packet.con_number,
+                p->data_prim_packet.transaction);
+            break;
+        case N_DISCONNECT_req:
+            printf("%s: Envoie du paquet --- PRIMITIVE=N_DISCONNECT_req,con_number=%c\n",
+                WHO_AM_I,
+                p->rel_prim_packet.con_number);
+            break;
+        case N_DISCONNECT_ind:
+            printf("%s: Envoie du paquet --- PRIMITIVE=N_DISCONNECT_ind,con_number=%c\n",
+                WHO_AM_I,
+                p->rel_prim_packet.con_number);
+            break;
     }
-
-    return -1;
 }
-
-
-
-

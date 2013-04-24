@@ -78,11 +78,16 @@ int main(int argc,char** argv)
 
             // Créaction d'un paquet contenant la primitive N_CONNECT_req
             p.prim = N_CONNECT_req;
-            p.con_prim_packet.src_addr = (char) rand();  // Adresses aléatoires pour la source
-            p.con_prim_packet.dest_addr = (char) rand(); // et la destination..
+            
+            // Génère un seed pour une valeur pseudo-aléatoire
+            // différente par rand()
+            srand(time(NULL));
+            p.con_prim_packet.src_addr = (unsigned char) rand();  // Adresses aléatoires pour la source
+            p.con_prim_packet.dest_addr = (unsigned char) rand(); // et la destination..
             p.con_prim_packet.con_number = connection->tcon.con_number;
             
             // Envoie d'un paquet et écoute de la réponse de ER
+            writePrimPacketToStdOut(&p,I_AM);
             if(sendPacketToInterface(&p,transToNet_pipe) == -1)
                 return -1;
             if (getPacketFromInterface(&p,netToTrans_pipe) == -1)
@@ -109,6 +114,7 @@ int main(int argc,char** argv)
                     p.data_prim_packet.con_number = connection->tcon.con_number;
                     
                     // Envoie du paquet à l'ER
+                    writePrimPacketToStdOut(&p,I_AM);
                     if(sendPacketToInterface(&p,transToNet_pipe) == -1)
                         return -1;
                     break;
@@ -131,6 +137,7 @@ int main(int argc,char** argv)
             p.data_prim_packet.con_number = connection->tcon.con_number;
             
             // Envoyer N_DATA.req
+            writePrimPacketToStdOut(&p,I_AM);
             if(sendPacketToInterface(&p,transToNet_pipe) == -1)
                 return -1;
         }
@@ -142,6 +149,7 @@ int main(int argc,char** argv)
     connection = first_con_node;
     while (connection) {
         p.rel_prim_packet.con_number = connection->tcon.con_number;
+        writePrimPacketToStdOut(&p,I_AM);
         if(sendPacketToInterface(&p,transToNet_pipe) == -1)
             return -1;
         connection = connection->tcon.next;

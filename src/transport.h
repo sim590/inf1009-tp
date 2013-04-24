@@ -10,6 +10,7 @@
 #define TRANSPORT_4R0LNUHE
 #define S_LEC "./S_LEC"
 #define S_ECR "./S_ECR"
+#define I_AM "ET"
 
 #include <transNnet.h>
 
