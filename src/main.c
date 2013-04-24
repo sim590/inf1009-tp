@@ -35,7 +35,7 @@ int main()
         return -1;
     }
     else if (pid == 0) {
-        // Fermeture des côte du tuyaux non-utiles
+        // Fermeture des cote du tuyaux non-utiles
         close(transToNet_pipe[0]);
         close(netToTrans_pipe[1]);
 
@@ -60,7 +60,7 @@ int main()
         return -1;
     }
     else if (pid == 0) {
-        // Fermeture des côte du tuyaux non-utiles
+        // Fermeture des cote du tuyaux non-utiles
         close(netToTrans_pipe[0]);
         close(transToNet_pipe[1]);
         // Preparation des arguments pour le processus

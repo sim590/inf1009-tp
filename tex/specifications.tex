@@ -30,8 +30,11 @@
 % Affichage de code source
 \usepackage{listings}
 \definecolor{dkgreen}{rgb}{0,0.6,0}
+\definecolor{dkblue}{rgb}{0,0,0.8}
 \definecolor{gray}{rgb}{0.5,0.5,0.5}
 \definecolor{mauve}{rgb}{0.58,0,0.82}
+
+\usepackage{courier}
 
 \lstset{ %
 backgroundcolor=\color{white},   % choose the background color; you must add \usepackage{color} or \usepackage{xcolor}
@@ -39,12 +42,12 @@ basicstyle=\footnotesize,        % the size of the fonts that are used for the c
 breakatwhitespace=false,         % sets if automatic breaks should only happen at whitespace
 breaklines=true,                 % sets automatic line breaking
 captionpos=b,                    % sets the caption-position to bottom
-commentstyle=\color{green},    % comment style
+commentstyle=\color{dkblue},    % comment style
 deletekeywords={...},            % if you want to delete keywords from the given language
 escapeinside={\%*}{*)},          % if you want to add LaTeX within your code
 extendedchars=true,              % lets you use non-ASCII characters; for 8-bits encodings only, does not work with UTF-8
 frame=single,                    % adds a frame around the code
-keywordstyle=\color{blue},       % keyword style
+keywordstyle=\color{dkgreen},       % keyword style
 morekeywords={*,...},            % if you want to add more keywords to the set
 numbers=left,                    % where to put the line-numbers; possible values are (none, left, right)
 numbersep=5pt,                   % how far the line-numbers are from the code
@@ -54,16 +57,12 @@ showspaces=false,                % show spaces everywhere adding particular unde
 showstringspaces=false,          % underline spaces within strings only
 showtabs=false,                  % show tabs within strings adding particular underscores
 stepnumber=2,                    % the step between two line-numbers. If it's 1, each line will be numbered
-stringstyle=\color{mauve},     % string literal style
+stringstyle=\color{red},     % string literal style
 tabsize=2,                       % sets default tabsize to 2 spaces
 xleftmargin=\parindent,
 title=\lstname                   % show the filename of files included with \lstinputlisting; also try caption instead of title
 }
 
-
-% Style des en-têtes de section
-\usepackage{sectsty}
-%\sectionfont{\sectionrule{0ex}{0pt}{-1ex}{0.5pt}}
 
 \newcommand{\HRule}{\rule{\linewidth}{0.5mm}}
 
@@ -105,7 +104,7 @@ title=\lstname                   % show the filename of files included with \lst
     
     \section*{Introduction} % (fold)
     \label{sec:intro}
-        Le document présent est destiné à la meilleure compréhension de la conception
+        Le présent document est destiné à la meilleure compréhension de la conception
         du programme réalisé pour le cours \emph{INF1009}. Les différents fichiers sources
         \footnote{Le code source est disponible à l'adresse {\color{blue}\href{https://github.com/sim590/inf1009-tp}{https://github.com/sim590/inf1009-tp}}}
         seront détaillés afin d'expliquer les choix qui ont été faits lors de l'écriture
@@ -116,20 +115,18 @@ title=\lstname                   % show the filename of files included with \lst
         différentes distributions \emph{GNU/Linux} (Debian, Ubuntu, Linux Mint, etc.)}.
     % section intro (end)
     
+    \lstset{language=make}
     \section{Makefile} % (fold)
     \label{sec:makefile}
         Le fichier nommé \emph{Makefile} permet de compiler\footnote{La compilation utilise le programme
         gcc (GNU C/C++ Compiler).} les différents fichiers sources
-        à l'aide d'une seule commande entrée au terminal: {\bf make all}. Lorsque cette commande
+        à l'aide d'une seule commande entrée au terminal \texttt{make all}. Lorsque cette commande
         est envoyée au terminal et que répertoire de travail est le même que le fichier \emph{Makefile},
-        la règle \emph{all} est appellée.
-        \lstset{language=make}
-        \begin{lstlisting}
-all: main transport network
-        \end{lstlisting}
+        la règle \texttt{all} est appellée.
+        \lstinputlisting[firstline=13,lastline=13]{../Makefile}
         Celle-ci appelle ses dépendences et ainsi compile tous les 
         fichiers sources.
-        %\lstinputlisting{../Makefile}
+        \lstinputlisting[firstline=14,lastline=42]{../Makefile}
 
         Une fois les fichiers compilés et liés dans 3 objets binaires
         {\bf inf1009-tp}, {\bf transport-entity} et {\bf network-entity},
@@ -141,15 +138,17 @@ all: main transport network
         et \emph{L\_ECR}.\\
 
         Le script permet aussi de nettoyer le répertoire des fichiers sources et des fichiers binaires
-        en utilisant respectivement la commande {\bf make clean} et {\bf make cleanbin}
+        en utilisant respectivement la commande \texttt{make clean} et \texttt{make cleanbin}.
+        \lstinputlisting[firstline=44,lastline=48]{../Makefile}
     % section makefile (end)
+    
+    \lstset{language=c}
     
     \section{inf1009-tp} % (fold)
     \label{sec:inf1009-tp}
-        \lstset{language=c}
-        Ce programme est comilé à l'aide du fichier \emph{main.c}. C'est le programme qui appelle
+        Ce programme est compilé à l'aide du fichier \emph{main.c}. C'est le programme qui appelle
         les deux processus ET\footnote{Entité Transport} et ER\footnote{Entité Réseau}. Il nécessite
-        que les deux programmes soient dans le même répertoire.
+        que les deux programmes soient dans le même répertoire
         
         \subsection{Fichiers d'entêtes} % (fold)
         \label{sub:fich-entete}
@@ -158,12 +157,38 @@ all: main transport network
             \label{ssub:main.h}
                 Le fichier \emph{main.h} contient les appels aux librairies nécessaires ainsi que la déclaration
                 d'une fonction à laquelle on fait appel dans le fichier \emph{main.c}.
+                \lstinputlisting{../src/main.h}
             % subsubsection main.h (end)
         % subsection fich-entete (end)
-        \subsection{Fichiers compilés} % (fold)
+        \subsection{Fichiers d'implémentation} % (fold)
         \label{sub:fich-compiles-inf1009-tp}
         
+        \subsubsection{main.c} % (fold)
+        \label{ssub:main.c}
+            Ce fichier consiste en la routine du programme {\bf inf1009-tp}. En premier lieu, il fait l'ouverture de tuyaux de communication
+            afin que les deux processus ET et ER puissent échanger.
+            \lstinputlisting[firstline=15,lastline=26]{../src/main.c}
+
+            Par la suite, à l'aide de la fonction \texttt{fork()}, il duplique le processus parent et créé un premier processus enfant.
+            \lstinputlisting[firstline=30,lastline=30]{../src/main.c}
+
+            L'image du processus enfant est alors écrasé par celle du programme {\bf transport-entity} au moyen de la fonction de la famille
+            \texttt{exec}.
+            \lstinputlisting[firstline=37,lastline=52]{../src/main.c}
+            
+            Le parent répète alors le même processus pour créer un deuxième processus enfant, c-à-d le processus exécutant le programme
+            {\bf network-entity}.
+            \lstinputlisting[firstline=55,lastline=76]{../src/main.c}
+
+            Ceci étant fait, le processus {\bf inf1009-tp} peut maintenant se terminer et laisser les deux processus ET et ER effectuer le reste.
+        % subsubsection main.c (end)
         % subsection fich-compiles (end)
     % section inf1009-tp (end)
 
-end{document}
+    \section{transport-entity} % (fold)
+    \label{sec:transport-entity}
+        Ce programme est compilé à l'aide des fichiers \emph{transport.c} et \emph{transNnet.c}. Lorsque ce processus est en marche, il fait la lecture
+        du fichier \emph{S\_LEC} afin d'obtenir la transaction de la couche session\footnote{Cette couche n'est pas implémentée dans le projet, mais est
+        simulée au moyen de deux fichiers \emph{S\_LEC} et \emph{S\_ECR}} pour la transmettre à la couche réseau. 
+    % section transport-entity (end)
+\end{document}
