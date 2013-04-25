@@ -339,21 +339,3 @@ int genRemotePacketResponse(PACKET* p)
     return 0;
 }
 
-//------------------------------------
-// Ecriture sur la sortie standard
-// des gestes entre la couche reseau 
-// et liaison
-//------------------------------------
-void writePacketToStdOut(PACKET* p)
-{
-    switch(&p->packet_type)
-    {
-        case 0:
-            printf("%s\n",I_AM);
-            break;
-        case 1:
-            break;
-        case 2:
-            break;
-    }
-}

@@ -27,6 +27,8 @@
 
 \usepackage{color}
 
+\usepackage[final]{pdfpages}
+
 % Affichage de code source
 \usepackage{listings}
 \definecolor{dkgreen}{rgb}{0,0.6,0}
@@ -150,7 +152,7 @@ title=\lstname                   % show the filename of files included with \lst
         les deux processus ET\footnote{Entité Transport} et ER\footnote{Entité Réseau}. Il nécessite
         que les deux programmes soient dans le même répertoire
         
-        \subsection{Fichiers d'entêtes} % (fold)
+        \subsection{Fichiers d'en-têtes} % (fold)
         \label{sub:fich-entete}
             
             \subsubsection{main.h} % (fold)
@@ -192,16 +194,23 @@ title=\lstname                   % show the filename of files included with \lst
         simulée au moyen de deux fichiers \emph{S\_LEC} et \emph{S\_ECR}} pour la transmettre à la couche réseau. De plus,
 	il écrit les messages qu'il reçoit de la couche réseau dans le fichier \emph{S\_ECR}.
 	
-	\subsection{Fichiers d'entêtes}
+	\subsection{Fichiers d'en-têtes}
 	\label{sub:fich-entetes-transport-entity}
 		\subsubsection{transNnet.h}
 		\label{ssub:transNnet.h}
-			Le fichier \emph{transNnet.h} contient toute déclaration de variables, structures et fonctions utiles
+			Le fichier \emph{transNnet.h} contient toute déclaration de librairies, variables, structures et fonctions utiles
 			autant dans le processus \emph{ET} que \emph{ER}.\\
 
 			Afin de permettre aux processus d'attendre un temps maximal après l'autre à l'écoute d'un tuyau,
 			on définit le nombre suivant:
 			\lstinputlisting[firstline=14,lastline=14]{../src/transNnet.h}
+
+            \vspace{0.5cm}
+
+            On retrouve les librairies suivantes:
+            \lstinputlisting[firstline=17,lastline=21]{../src/transNnet.h}
+
+            \vspace{0.5cm}
 
 			On retrouve l'énumération et les structures suivantes:
 			
@@ -237,17 +246,207 @@ title=\lstname                   % show the filename of files included with \lst
             Permet une manipulation transparente des structures de connexion (même principe que l'union précédente).\\
 
             De plus, on retrouve la déclaration des différentes fonctions définies dans le fichier \emph{transNnet.c}.
-            \lstinputlisting[firstline=106,lastline=112]{../src/transNnet.h}
-
+            \lstinputlisting[firstline=106,lastline=106]{../src/transNnet.h}
+            Cette fonction permet d'écouter sur le tuyau demandé la réponse de l'interlocuteur. On passe en paramètre un pointeur vers un paquet \texttt{PRIM\_PACKET}
+            dans lequel on souhaite stocker les informations tirées du tuyau identifié par un entier.
+            \lstinputlisting[firstline=107,lastline=107]{../src/transNnet.h}
+            À l'aide de cette fonction, l'entité transport ou réseau d'écrire sur le tuyau spécifié par un entier. On passe en paramètre un pointeur vers un paquet \texttt{PRIM\_PACKET}
+            qu'on souhaite transmettre à l'interlocuteur.
+            \lstinputlisting[firstline=108,lastline=108]{../src/transNnet.h}
+            Détruit la liste chaînée de connexions afin de libérer les ressources utilisés à la fin de l'exécution du processus en question.
+            \lstinputlisting[firstline=109,lastline=109]{../src/transNnet.h}
+            Trouve une connexion dans la liste chaînée. Si celle-ci s'y trouve, la fonction renvoie un pointeur vers elle, autrement elle renvoie la valeur constante \texttt{NULL}.
+            \lstinputlisting[firstline=110,lastline=110]{../src/transNnet.h}
+            Ajoute une connexion à la liste chaînée. On passe en paramètre le numéro de connexion. Si l'entité réseau utilise cette fonction, elle passera une adresse source et une 
+            adresse destination, sinon si c'est l'entité transport, celle-ci ne fait que passer la valeur \texttt{NULL} aux autres paramètres.
+            \lstinputlisting[firstline=111,lastline=111]{../src/transNnet.h}
+            Retire une connexion de la liste chaînée. On passe le numéro de connexion en paramètre.
+            \lstinputlisting[firstline=112,lastline=112]{../src/transNnet.h}
+            Écriture d'informations relatives à la communication entre ET et ER sur la sortie standard.
 		% subsubsection transNnet.h
+        \subsubsection{transport.h} % (fold)
+        \label{ssub:transport.h}
+			Le fichier \emph{transport.h} est le fichier d'en-tête principal du fichier d'implémentation \emph{transport.c}. Il contient toute déclaration de librairies, 
+            variables, structures et fonctions utile autant dans le processus \emph{ET} que \emph{ER}.\\
+            
+            \vspace{0.5cm}
+            
+            On définit quelques variables:
+            \lstinputlisting[firstline=11,lastline=12]{../src/transport.h}
+            C'est le nom de fichiers statiques et importants au déroulement du processus.
+
+            \lstinputlisting[firstline=13,lastline=13]{../src/transport.h}
+            Variable permettant d'identifier le processus lors de l'utilisation de fonctions déclarées de façon communes à \emph{ET} et \emph{ER}.
+            
+            \vspace{0.5cm}
+
+            On inclue des fichiers d'en-tête:
+            \lstinputlisting[firstline=15,lastline=15]{../src/transport.h}
+
+            \vspace{0.5cm}
+
+            On déclare les fonctions suivantes:
+            \lstinputlisting[firstline=19,lastline=19]{../src/transport.h}
+            Cette fonction permet d'extraire le message à envoyer de la ligne recueilli du fichier \emph{S\_LEC}.
+            \lstinputlisting[firstline=20,lastline=20]{../src/transport.h}
+            Celle-ci écrit les résultats dans le fichiers \emph{S\_ECR}.
+        % subsubsection transport.h (end)
 	% subsection fich-entetes-transport-entity (end)
     \subsection{Fichiers d'implémentation} % (fold)
     \label{sub:fich-implementation-trans-entity}
+        \subsubsection{transNnet.c} % (fold)
+        \label{ssub:transNnet.c}
+            Ce fichier décrit une interface commune entre l'entité transport et l'entité réseau. Afin de communiquer, chacune des entités utilisera les fonctions déclarées dans le fichier
+            \emph{transNnet.h} et définies dans le fichier \emph{transNnet.c}.
+        % subsubsection transNnet.c (end)
         \subsubsection{transport.c} % (fold)
         \label{ssub:transport.c}
-            Ce fichier source décrit la routine de l'entité transport. Premièrement, on peut observer le pseudo-code de l'algorithme de la routine:
+            Ce fichier décrit la routine du processus \emph{ET}. De façon rapide, il est suffisant d'observer le pseudo-code de l'algorithme suivant:
+\begin{lstlisting}
+TANT QUE FICHIER_NON_VIDE
+    LIRE S_LEC
+    
+    REGARDER_TABLE_DE_CONNEXIONS
+    
+    SI CONNEXION_EXISTE_PAS
+        ENVOYER_CONNECTION_REQ
+        ECOUTER_REPONSE
+        
+        SI REPONSE_POSITIVE
+            CHANGER_ETAT_CONNEXION_TABLE_CONNEXION
+            ENVOYER_DATA_REQ
+        SINON
+            SUPPRIMER_CONNEXION
+        FIN SI
+    SINON
+        ENVOYER_DATA_REQ
+    FIN SI
+FIN TANT QUE
 
+POUR TOUTES LES CONNEXIONS
+    SUPPRIMMER_CONNEXION
+\end{lstlisting}
+            
         % subsubsection transport.c (end)
     % subsection fich-implementation-trans-entity (end)
     % section transport-entity (end)
+
+    \section{network-entity} % (fold)
+    \label{sec:network-entity}
+        Ce programme est compilé à l'aide des fichiers \emph{network.c} et \emph{transNnet.c}. Le processus étant lancé, il écoute les requêtes de l'entité transport afin de les soumettre
+        à plusieurs tests. Il vérifie différentes conditions nécessaire à l'acheminement des requêtes de \emph{ET} et simule la réponse d'un système distant en écrivant celle-ci dans la
+        couche liaison (simulée par les fichiers \emph{L\_LEC} et \emph{L\_ECR}).
+
+        \subsection{Fichiers d'en-têtes} % (fold)
+        \label{sub:Fichiers d'en-têtes}
+        
+            \subsubsection{network.h} % (fold)
+            \label{ssub:network.h}
+                Ce fichier consiste en l'en-tête principale du fichier d'implémentation \emph{network.c}. Il contient les différentes déclarations de structures, fonctions, librairies et variables
+                utiles au processus \emph{ER}.\\
+
+                On définie les constantes suivantes:
+                \lstinputlisting[firstline=13,lastline=14]{../src/network.h}
+                Chemin vers les fichiers nécessaire au bon fonctionnement du processus \emph{ER}.
+                \lstinputlisting[firstline=16,lastline=16]{../src/network.h}
+                Chaîne de caractères constante permettant d'identifier le processus lors de l'utilisation de l'interface définie dans \emph{transNnet.c}.
+
+                \vspace{0.5cm}
+
+                On inclue des fichiers d'en-tête:
+                \lstinputlisting[firstline=18,lastline=18]{../src/network.h}
+
+                \vspace{0.5cm}
+
+                On retrouve les émumérations et structures suivantes:
+                \lstinputlisting[firstline=26,lastline=30]{../src/network.h}
+                Énumération des types de paquets admissibles lors de la phase de connexion.
+                \lstinputlisting[firstline=32,lastline=35]{../src/network.h}
+                Énumération des raisons fournies dans un paquet lors d'une libération de connexion.
+                \lstinputlisting[firstline=41,lastline=48]{../src/network.h}
+                Paquet manipulé lors de la phase de connexion. Il est composé d'un type de paquet, un type de paquet de connexion, un numéro de connexion, une adresse source, une adresse destination et
+                un champ raison utilisé lors du refus de connexion.
+                \lstinputlisting[firstline=70,lastline=75]{../src/network.h}
+                Paquet de données utilisé lors de la phase de transmission de données. Il est composé d'un type de paquet, un type, un numéro de connexion ainsi que d'un segment de données.
+                \lstinputlisting[firstline=81,lastline=87]{../src/network.h}
+                Paquet de libération utilisé lors de la phase de libération de connexion initiée par le destinateur. Il est composé d'un type de paquet, un type, un numéro de connexion, une adresse source et adresse destination.
+                \lstinputlisting[firstline=92,lastline=97]{../src/network.h}
+                Union permettant une écriture transparente du code. Les structures mentionnées plus haut partagent tous un même espace mémoire à l'intérieure d'une union.
+                
+                \vspace{0.5cm}
+
+                On déclare les fonctions suivantes:
+                \lstinputlisting[firstline=99,lastline=99]{../src/network.h}
+                Envoie un paquet de données vers la couche liaison. On passe en paramètre un pointeur vers le paquet préalablement construit et le chemin\footnote{Il est important de se rappeller que le système distant est
+                simulé et donc, c'est le processus \emph{ER} qui écrira dans les deux fichiers} vers le fichier dans lequel on souhaite écrire le paquet.
+                \lstinputlisting[firstline=100,lastline=100]{../src/network.h}
+                Génère la réponse du système distant. On passe en paramètre un pointeur vers le paquet précédemment envoyé à la couche liaison.
+            % subsubsection network.h (end)
+            \subsubsection{transNnet.h} % (fold)
+            \label{ssub:transNnet.h-net}
+                Voir section {\color{blue} \ref{ssub:transNnet.h}}
+            % subsubsection transNnet.h-net (end)
+        % subsection Fichiers d'en-têtes (end)
+        \subsection{Fichier d'implémentation} % (fold)
+        \label{sub:fich-implementation-network-entity}
+            \subsubsection{network.c} % (fold)
+            \label{ssub:network.c}
+                Ce fichier consiste en la routine de l'entité réseau. Afin de comprendre ce que fait celui-ci, il est suffisant d'observer le pseudo-code suivant:
+\begin{lstlisting}
+TANT QUE MESSAGE_DANS_TUYAU
+    SI N_CONNECT_REQ
+        SI ER_ACCEPTE
+            SI CONNEXION_NEXISTE_PAS
+                AJOUTER_CONNEXION
+            FIN SI
+
+            CONSTRUIRE_CONNECTION_PACKET
+
+            ECRIRE_CONNECTION_PACKET(L_ECR)
+
+            GEN_REPONSE_B
+
+            ECRIRE_REPONSE_B(L_LEC)
+            SI REPONSE_B_OUI
+                REPONDRE_ET_OUI_B
+            SINON
+                REPONDRE_ET_NON_B
+        SINON
+            REPONDRE_ET_NON
+    SINON SI N_DATA_REQ
+        SEGMENTER_MESSAGE
+        
+        POUR TOUT SEGMENTS
+            ECRIRE_DATA_PACKET(L_ECR)
+            GEN_REPONSE_B
+            
+            ECRIRE_REPONSE_B(L_LEC)
+            SI AUCUNE_REPONSE OU REPONSE_NEGATIVE
+                ECRIRE_DATA_PACKET(L_ECR)
+                GEN_REPONSE_B
+                
+                ECRIRE_REPONSE_B
+            FIN SI
+        FIN POUR TOUT
+    SINON SI N_DISCONNECT_REQ
+        ECRIRE_REL_PACKET(L_ECR)
+    FIN SI
+FIN TANT QUE
+\end{lstlisting}
+            % subsubsection network.c (end)
+            \subsubsection{transNnet.c} % (fold)
+            \label{ssub:transNnet.c-net}
+                Voir section {\color{blue} \ref{ssub:transNnet.c}}
+            % subsubsection transNnet.c-net (end)
+        % subsection fich-implementation-network-entity (end)
+    % section network-entity (end)
+    \newpage
+    \section{ANNEXES} % (fold)
+    \label{sec:ANNEXES}
+        \subsection*{ANNEXE A: Projet de Réseaux} % (fold)
+        \label{sub:ANNEXE A: Projet de Réseaux}
+        
+        % subsection ANNEXE A: Projet de Réseaux (end)
+        \includepdf[pages=1-12]{./aux/enonce-tp.pdf}
+    % section ANNEXES (end)
 \end{document}

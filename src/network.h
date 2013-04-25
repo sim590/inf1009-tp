@@ -98,7 +98,6 @@ typedef union {
 
 int sendPacketToDataLinkLayer(PACKET*,char*);
 int genRemotePacketResponse(PACKET*);
-void writePacketToStdOut(PACKET*);
 
 #endif /* end of include guard: NETWORK_UNQBN59Z */
 
