@@ -189,6 +189,65 @@ title=\lstname                   % show the filename of files included with \lst
     \label{sec:transport-entity}
         Ce programme est compilé à l'aide des fichiers \emph{transport.c} et \emph{transNnet.c}. Lorsque ce processus est en marche, il fait la lecture
         du fichier \emph{S\_LEC} afin d'obtenir la transaction de la couche session\footnote{Cette couche n'est pas implémentée dans le projet, mais est
-        simulée au moyen de deux fichiers \emph{S\_LEC} et \emph{S\_ECR}} pour la transmettre à la couche réseau. 
+        simulée au moyen de deux fichiers \emph{S\_LEC} et \emph{S\_ECR}} pour la transmettre à la couche réseau. De plus,
+	il écrit les messages qu'il reçoit de la couche réseau dans le fichier \emph{S\_ECR}.
+	
+	\subsection{Fichiers d'entêtes}
+	\label{sub:fich-entetes-transport-entity}
+		\subsubsection{transNnet.h}
+		\label{ssub:transNnet.h}
+			Le fichier \emph{transNnet.h} contient toute déclaration de variables, structures et fonctions utiles
+			autant dans le processus \emph{ET} que \emph{ER}.\\
+
+			Afin de permettre aux processus d'attendre un temps maximal après l'autre à l'écoute d'un tuyau,
+			on définit le nombre suivant:
+			\lstinputlisting[firstline=14,lastline=14]{../src/transNnet.h}
+
+			On retrouve l'énumération et les structures suivantes:
+			
+            \lstinputlisting[firstline=28,lastline=40]{../src/transNnet.h}
+			Cette énumération permet de passer facilement les primitives de communication entre les deux couches implémentées.
+			
+            \lstinputlisting[firstline=46,lastline=51]{../src/transNnet.h}
+            C'est la forme selon laquelle on construit une requête lors de la phase de connexion autant du côté de \emph{ET} que de \emph{ER}. 
+            La structure est composée d'une primitive, un numéro de connexion, une adresse source et une adresse de destination.
+
+            \lstinputlisting[firstline=53,lastline=57]{../src/transNnet.h}
+            C'est la forme selon laquelle on construit une requête lors de la phase de transmission de données. La structure est composée d'une primitive,
+            un numéro de connexion et une transaction\footnote{La transaction est prise dans le fichier \emph{S\_LEC} avec le numéro correspondant}.
+
+            \lstinputlisting[firstline=59,lastline=62]{../src/transNnet.h}
+            C'est la forme selon laquelle on construit une requête lors de la phase de libération de connexion. On fournit une primitive ainsi qu'un 
+            numéro de connexion.
+
+            \lstinputlisting[firstline=68,lastline=73]{../src/transNnet.h}
+            On utilise l'union afin de rendre transparente la construction d'un paquet. Autrement dit, le programme créé toujours des structures spéciales 
+            du type \texttt{PRIM\_PACKET} et ainsi un seul des champ de cette structure est initialisée. La primitive sert de clée afin de savoir de
+            quelle\footnote{Dans une union, tous les champs partagent le même espace mémoire.} structure on parle à tout moment.
+
+            \lstinputlisting[firstline=79,lastline=83]{../src/transNnet.h}
+            Cette structure permet de créer une liste chaînée de connexions et ainsi garder le suivi des connexions en cours du côté de l'\emph{ET}. 
+            Chaque noeud est composé d'un numéro de connexion, un état de connexion et un pointeur vers la connexion suivante.
+
+            \lstinputlisting[firstline=89,lastline=95]{../src/transNnet.h}
+            Identique à la structure précédente mis-à-part du point qu'elle est utilisée du côté de l'\emph{ER} et qu'elle possède une adresse source et
+            de destination pour chaque connexion.
+
+            \lstinputlisting[firstline=97,lastline=100]{../src/transNnet.h}
+            Permet une manipulation transparente des structures de connexion (même principe que l'union précédente).\\
+
+            De plus, on retrouve la déclaration des différentes fonctions définies dans le fichier \emph{transNnet.c}.
+            \lstinputlisting[firstline=106,lastline=112]{../src/transNnet.h}
+
+		% subsubsection transNnet.h
+	% subsection fich-entetes-transport-entity (end)
+    \subsection{Fichiers d'implémentation} % (fold)
+    \label{sub:fich-implementation-trans-entity}
+        \subsubsection{transport.c} % (fold)
+        \label{ssub:transport.c}
+            Ce fichier source décrit la routine de l'entité transport. Premièrement, on peut observer le pseudo-code de l'algorithme de la routine:
+
+        % subsubsection transport.c (end)
+    % subsection fich-implementation-trans-entity (end)
     % section transport-entity (end)
 \end{document}
