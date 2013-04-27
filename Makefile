@@ -49,3 +49,4 @@ cleanall: clean
 
 bindir:
 	mkdir -p $(BINDIR)
+	touch $(BINDIR)/S_LEC # On veut le fichier de transaction dans le dossier!

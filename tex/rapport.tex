@@ -123,7 +123,7 @@ title=\lstname                   % show the filename of files included with \lst
         Le fichier nommé \emph{Makefile} permet de compiler\footnote{La compilation utilise le programme
         gcc (GNU C/C++ Compiler).} les différents fichiers sources
         à l'aide d'une seule commande entrée au terminal \texttt{make all}. Lorsque cette commande
-        est envoyée au terminal et que répertoire de travail est le même que le fichier \emph{Makefile},
+        est envoyée au terminal et que le répertoire de travail est le même que le fichier \emph{Makefile},
         la règle \texttt{all} est appellée.
         \lstinputlisting[firstline=13,lastline=13]{../Makefile}
         Celle-ci appelle ses dépendences et ainsi compile tous les 
@@ -140,7 +140,7 @@ title=\lstname                   % show the filename of files included with \lst
         et \emph{L\_ECR}.\\
 
         Le script permet aussi de nettoyer le répertoire des fichiers sources et des fichiers binaires
-        en utilisant respectivement la commande \texttt{make clean} et \texttt{make cleanbin}.
+        en utilisant respectivement la commande \texttt{make clean} et \texttt{make cleanall}.
         \lstinputlisting[firstline=44,lastline=48]{../Makefile}
     % section makefile (end)
     
@@ -149,7 +149,7 @@ title=\lstname                   % show the filename of files included with \lst
     \section{inf1009-tp} % (fold)
     \label{sec:inf1009-tp}
         Ce programme est compilé à l'aide du fichier \emph{main.c}. C'est le programme qui appelle
-        les deux processus ET\footnote{Entité Transport} et ER\footnote{Entité Réseau}. Il nécessite
+        les deux processus \emph{ET}\footnote{Entité Transport} et \emph{ER}\footnote{Entité Réseau}. Il nécessite
         que les deux programmes soient dans le même répertoire
         
         \subsection{Fichiers d'en-têtes} % (fold)
@@ -182,7 +182,7 @@ title=\lstname                   % show the filename of files included with \lst
             {\bf network-entity}.
             \lstinputlisting[firstline=55,lastline=76]{../src/main.c}
 
-            Ceci étant fait, le processus {\bf inf1009-tp} peut maintenant se terminer et laisser les deux processus ET et ER effectuer le reste.
+            Ceci étant fait, le processus {\bf inf1009-tp} peut maintenant se terminer et laisser les deux processus \emph{ET} et \emph{ER} effectuer le reste.
         % subsubsection main.c (end)
         % subsection fich-compiles (end)
     % section inf1009-tp (end)
@@ -202,67 +202,80 @@ title=\lstname                   % show the filename of files included with \lst
 			autant dans le processus \emph{ET} que \emph{ER}.\\
 
 			Afin de permettre aux processus d'attendre un temps maximal après l'autre à l'écoute d'un tuyau,
-			on définit le nombre suivant:
+			on définit le nombre suivant:\\
 			\lstinputlisting[firstline=14,lastline=14]{../src/transNnet.h}
 
             \vspace{0.5cm}
 
-            On retrouve les librairies suivantes:
+            On retrouve les librairies suivantes:\\
             \lstinputlisting[firstline=17,lastline=21]{../src/transNnet.h}
 
             \vspace{0.5cm}
 
-			On retrouve l'énumération et les structures suivantes:
+			On retrouve l'énumération et les structures suivantes:\\
 			
             \lstinputlisting[firstline=28,lastline=40]{../src/transNnet.h}
-			Cette énumération permet de passer facilement les primitives de communication entre les deux couches implémentées.
+			Cette énumération permet de passer facilement les primitives de communication entre les deux couches implémentées. Chaque membre de
+            l'énumération est un entier et est par défaut attribué la valeur $0,1,2,...$, tout dépendemment quel est sa position dans l'énumération.\\
 			
             \lstinputlisting[firstline=46,lastline=51]{../src/transNnet.h}
             C'est la forme selon laquelle on construit une requête lors de la phase de connexion autant du côté de \emph{ET} que de \emph{ER}. 
-            La structure est composée d'une primitive, un numéro de connexion, une adresse source et une adresse de destination.
+            La structure est composée d'une primitive, un numéro de connexion, une adresse source et une adresse de destination.\\
 
             \lstinputlisting[firstline=53,lastline=57]{../src/transNnet.h}
             C'est la forme selon laquelle on construit une requête lors de la phase de transmission de données. La structure est composée d'une primitive,
-            un numéro de connexion et une transaction\footnote{La transaction est prise dans le fichier \emph{S\_LEC} avec le numéro correspondant}.
+            un numéro de connexion et une transaction\footnote{La transaction est prise dans le fichier \emph{S\_LEC} avec le numéro correspondant}.\\
 
             \lstinputlisting[firstline=59,lastline=62]{../src/transNnet.h}
             C'est la forme selon laquelle on construit une requête lors de la phase de libération de connexion. On fournit une primitive ainsi qu'un 
-            numéro de connexion.
+            numéro de connexion.\\
 
             \lstinputlisting[firstline=68,lastline=73]{../src/transNnet.h}
-            On utilise l'union afin de rendre transparente la construction d'un paquet. Autrement dit, le programme créé toujours des structures spéciales 
-            du type \texttt{PRIM\_PACKET} et ainsi un seul des champ de cette structure est initialisée. La primitive sert de clée afin de savoir de
-            quelle\footnote{Dans une union, tous les champs partagent le même espace mémoire.} structure on parle à tout moment.
+            On utilise l'union afin de rendre uniforme la construction d'un paquet. Autrement dit, le programme créé toujours des structures spéciales 
+            du type \texttt{PRIM\_PACKET} et ainsi un seul des champ de cette structure est initialisé. La primitive sert de clée afin de savoir de
+            quelle\footnote{Dans une union, tous les champs partagent le même espace mémoire.} structure on parle à tout moment.\\
 
             \lstinputlisting[firstline=79,lastline=83]{../src/transNnet.h}
             Cette structure permet de créer une liste chaînée de connexions et ainsi garder le suivi des connexions en cours du côté de l'\emph{ET}. 
-            Chaque noeud est composé d'un numéro de connexion, un état de connexion et un pointeur vers la connexion suivante.
+            Chaque noeud est composé d'un numéro de connexion, un état de connexion et un pointeur vers la connexion suivante.\\
 
             \lstinputlisting[firstline=89,lastline=95]{../src/transNnet.h}
-            Identique à la structure précédente mis-à-part du point qu'elle est utilisée du côté de l'\emph{ER} et qu'elle possède une adresse source et
-            de destination pour chaque connexion.
+            Identique à la structure précédente mis à part du point qu'elle est utilisée du côté de l'\emph{ER} et qu'elle possède une adresse source et
+            de destination pour chaque connexion.\\
 
             \lstinputlisting[firstline=97,lastline=100]{../src/transNnet.h}
-            Permet une manipulation transparente des structures de connexion (même principe que l'union précédente).\\
+            Permet une manipulation uniforme des structures de connexion (même principe que l'union précédente).\\
 
-            De plus, on retrouve la déclaration des différentes fonctions définies dans le fichier \emph{transNnet.c}.
+            De plus, on retrouve la déclaration des différentes fonctions définies dans le fichier \emph{transNnet.c}.\\
+
             \lstinputlisting[firstline=106,lastline=106]{../src/transNnet.h}
-            Cette fonction permet d'écouter sur le tuyau demandé la réponse de l'interlocuteur. On passe en paramètre un pointeur vers un paquet \texttt{PRIM\_PACKET}
-            dans lequel on souhaite stocker les informations tirées du tuyau identifié par un entier.
+            Cette fonction permet d'écouter sur le tuyau demandé la réponse de l'interlocuteur. On passe en paramètre un pointeur vers un paquet 
+            \texttt{PRIM\_PACKET} dans lequel on souhaite stocker les informations tirées du tuyau identifié par un entier. La valeur de retour
+            est le nombre de caractères lus sur le tuyau ou $-1$ pour signifier qu'il n'y a pas été possible de lire quoi que ce soit après 
+            \texttt{MAX\_WAIT\_TIME} secondes.\\
+
             \lstinputlisting[firstline=107,lastline=107]{../src/transNnet.h}
-            À l'aide de cette fonction, l'entité transport ou réseau d'écrire sur le tuyau spécifié par un entier. On passe en paramètre un pointeur vers un paquet \texttt{PRIM\_PACKET}
-            qu'on souhaite transmettre à l'interlocuteur.
+            À l'aide de cette fonction, l'entité transport ou réseau peut écrire sur le tuyau spécifié par un entier. On passe en paramètre un pointeur 
+            vers un paquet \texttt{PRIM\_PACKET} qu'on souhaite transmettre à l'interlocuteur et un descripteur de fichier. La valeur de retour est
+            le nombre de caractères écrit sur le tuyau ou $-1$ si c'est impossible d'écrire sur le tuyau.\\
+
             \lstinputlisting[firstline=108,lastline=108]{../src/transNnet.h}
-            Détruit la liste chaînée de connexions afin de libérer les ressources utilisés à la fin de l'exécution du processus en question.
+            Détruit la liste chaînée de connexions afin de libérer les ressources utilisés à la fin de l'exécution du processus en question.\\
+
             \lstinputlisting[firstline=109,lastline=109]{../src/transNnet.h}
-            Trouve une connexion dans la liste chaînée. Si celle-ci s'y trouve, la fonction renvoie un pointeur vers elle, autrement elle renvoie la valeur constante \texttt{NULL}.
+            Trouve une connexion dans la liste chaînée. Si celle-ci s'y trouve, la fonction renvoie un pointeur vers elle, autrement elle renvoie 
+            la valeur constante \texttt{NULL}.\\
+
             \lstinputlisting[firstline=110,lastline=110]{../src/transNnet.h}
-            Ajoute une connexion à la liste chaînée. On passe en paramètre le numéro de connexion. Si l'entité réseau utilise cette fonction, elle passera une adresse source et une 
-            adresse destination, sinon si c'est l'entité transport, celle-ci ne fait que passer la valeur \texttt{NULL} aux autres paramètres.
+            Ajoute une connexion à la liste chaînée. On passe en paramètre le numéro de connexion. Si l'entité réseau utilise cette fonction, 
+            elle passera une adresse source et une adresse destination, sinon si c'est l'entité transport, celle-ci ne fait que passer la valeur 
+            \texttt{NULL} aux autres paramètres. La valeur des retour est un pointeur vers le noeud de connexion ajouté.\\
+
             \lstinputlisting[firstline=111,lastline=111]{../src/transNnet.h}
-            Retire une connexion de la liste chaînée. On passe le numéro de connexion en paramètre.
+            Retire une connexion de la liste chaînée. On passe le numéro de connexion en paramètre.\\
+
             \lstinputlisting[firstline=112,lastline=112]{../src/transNnet.h}
-            Écriture d'informations relatives à la communication entre ET et ER sur la sortie standard.
+            Écriture d'informations relatives à la communication entre ET et ER sur la sortie standard.\\
 		% subsubsection transNnet.h
         \subsubsection{transport.h} % (fold)
         \label{ssub:transport.h}
@@ -271,9 +284,9 @@ title=\lstname                   % show the filename of files included with \lst
             
             \vspace{0.5cm}
             
-            On définit quelques variables:
+            On définit quelques variables:\\
             \lstinputlisting[firstline=11,lastline=12]{../src/transport.h}
-            C'est le nom de fichiers statiques et importants au déroulement du processus.
+            C'est le nom de fichiers statiques et importants au déroulement du processus.\\
 
             \lstinputlisting[firstline=13,lastline=13]{../src/transport.h}
             Variable permettant d'identifier le processus lors de l'utilisation de fonctions déclarées de façon communes à \emph{ET} et \emph{ER}.
@@ -285,11 +298,14 @@ title=\lstname                   % show the filename of files included with \lst
 
             \vspace{0.5cm}
 
-            On déclare les fonctions suivantes:
+            On déclare les fonctions suivantes:\\
             \lstinputlisting[firstline=19,lastline=19]{../src/transport.h}
-            Cette fonction permet d'extraire le message à envoyer de la ligne recueilli du fichier \emph{S\_LEC}.
+            Cette fonction permet d'extraire le message à envoyer de la ligne recueilli du fichier \emph{S\_LEC}. La valeur de retour est le
+            nombre de caractères composant le message ou $-1$ si le message n'a pu être lu selon les spécifications de format.\\
+
             \lstinputlisting[firstline=20,lastline=20]{../src/transport.h}
-            Celle-ci écrit les résultats dans le fichiers \emph{S\_ECR}.
+            Celle-ci écrit les résultats dans le fichiers \emph{S\_ECR}. La valeur de retour est le nombre de caractères écrits dans le fichier
+            ou $-1$ si c'est impossible d'écrire.
         % subsubsection transport.h (end)
 	% subsection fich-entetes-transport-entity (end)
     \subsection{Fichiers d'implémentation} % (fold)
@@ -345,42 +361,56 @@ POUR TOUTES LES CONNEXIONS
                 Ce fichier consiste en l'en-tête principale du fichier d'implémentation \emph{network.c}. Il contient les différentes déclarations de structures, fonctions, librairies et variables
                 utiles au processus \emph{ER}.\\
 
-                On définie les constantes suivantes:
+                On définie les constantes suivantes:\\
                 \lstinputlisting[firstline=13,lastline=14]{../src/network.h}
-                Chemin vers les fichiers nécessaire au bon fonctionnement du processus \emph{ER}.
+                Chemin vers les fichiers nécessaire au bon fonctionnement du processus \emph{ER}.\\
+
                 \lstinputlisting[firstline=16,lastline=16]{../src/network.h}
-                Chaîne de caractères constante permettant d'identifier le processus lors de l'utilisation de l'interface définie dans \emph{transNnet.c}.
+                Chaîne de caractères constante permettant d'identifier le processus lors de l'utilisation de l'interface définie dans \emph{transNnet.c}.\\
 
                 \vspace{0.5cm}
 
-                On inclue des fichiers d'en-tête:
+                On inclue des fichiers d'en-tête:\\
                 \lstinputlisting[firstline=18,lastline=18]{../src/network.h}
 
                 \vspace{0.5cm}
 
-                On retrouve les émumérations et structures suivantes:
+                On retrouve les émumérations et structures suivantes:\\
                 \lstinputlisting[firstline=26,lastline=30]{../src/network.h}
-                Énumération des types de paquets admissibles lors de la phase de connexion.
+                Énumération des types de paquets admissibles lors de la phase de connexion.\\
+
                 \lstinputlisting[firstline=32,lastline=35]{../src/network.h}
-                Énumération des raisons fournies dans un paquet lors d'une libération de connexion.
+                Énumération des raisons fournies dans un paquet lors d'une libération de connexion.\\
+
                 \lstinputlisting[firstline=41,lastline=48]{../src/network.h}
-                Paquet manipulé lors de la phase de connexion. Il est composé d'un type de paquet, un type de paquet de connexion, un numéro de connexion, une adresse source, une adresse destination et
-                un champ raison utilisé lors du refus de connexion.
+                Paquet manipulé lors de la phase de connexion. Il est composé d'un type de paquet, un type de paquet de connexion, un numéro de connexion, 
+                une adresse source, une adresse destination et un champ raison utilisé lors du refus de connexion.\\
+
                 \lstinputlisting[firstline=70,lastline=75]{../src/network.h}
-                Paquet de données utilisé lors de la phase de transmission de données. Il est composé d'un type de paquet, un type, un numéro de connexion ainsi que d'un segment de données.
+                Paquet de données utilisé lors de la phase de transmission de données. Il est composé d'un type de paquet, un type, un numéro de connexion 
+                ainsi que d'un segment de données.\\
+
                 \lstinputlisting[firstline=81,lastline=87]{../src/network.h}
-                Paquet de libération utilisé lors de la phase de libération de connexion initiée par le destinateur. Il est composé d'un type de paquet, un type, un numéro de connexion, une adresse source et adresse destination.
+                Paquet de libération utilisé lors de la phase de libération de connexion initiée par le destinateur. Il est composé d'un type de paquet, 
+                un type, un numéro de connexion, une adresse source et adresse destination.\\
+
                 \lstinputlisting[firstline=92,lastline=97]{../src/network.h}
-                Union permettant une écriture transparente du code. Les structures mentionnées plus haut partagent tous un même espace mémoire à l'intérieure d'une union.
+                Union permettant une écriture uniforme du code. Les structures mentionnées plus haut partagent tous un même espace mémoire à 
+                l'intérieure d'une union.
                 
                 \vspace{0.5cm}
 
-                On déclare les fonctions suivantes:
+                On déclare les fonctions suivantes:\\
                 \lstinputlisting[firstline=99,lastline=99]{../src/network.h}
-                Envoie un paquet de données vers la couche liaison. On passe en paramètre un pointeur vers le paquet préalablement construit et le chemin\footnote{Il est important de se rappeller que le système distant est
-                simulé et donc, c'est le processus \emph{ER} qui écrira dans les deux fichiers} vers le fichier dans lequel on souhaite écrire le paquet.
+                Envoie un paquet de données vers la couche liaison. On passe en paramètre un pointeur vers le paquet préalablement construit et le 
+                chemin\footnote{Il est important de se rappeller que le système distant est simulé et donc, c'est le processus \emph{ER} qui écrira 
+                dans les deux fichiers} vers le fichier dans lequel on souhaite écrire le paquet. La valeur de retour est le nombre de caractères
+                écrits ou $-1$ s'il est impossible d'écrire.\\
+
                 \lstinputlisting[firstline=100,lastline=100]{../src/network.h}
-                Génère la réponse du système distant. On passe en paramètre un pointeur vers le paquet précédemment envoyé à la couche liaison.
+                Génère la réponse du système distant. On passe en paramètre un pointeur vers le paquet précédemment envoyé à la couche liaison. La valeur
+                de retour est $1$ si le paquet est écrit lors de la phase de connexion ou lors de la phase de transfert de données et que 
+                l'acquitement est positif, $0$ s'il n'y a aucun acquitement ou $-1$ si l'acquitement est négatif.
             % subsubsection network.h (end)
             \subsubsection{transNnet.h} % (fold)
             \label{ssub:transNnet.h-net}
@@ -440,6 +470,57 @@ FIN TANT QUE
             % subsubsection transNnet.c-net (end)
         % subsection fich-implementation-network-entity (end)
     % section network-entity (end)
+    \section{Fichiers d'audit} % (fold)
+    \label{sec:fich-audit}
+        L'ensemble des processus utilisent des fichiers afin de permette à l'utilisateur d'observer les résultats. Chaque processus a une paire
+        de fichier qu'il utilise afin de simuler le dialogue avec une couche adjacente. L'entité transport utilise les fichiers \emph{S\_LEC}
+        et \emph{S\_ECR} afin de respectivement écouter et parler à la couche session. D'autre part, l'entité réseau utilise les fichiers
+        \emph{L\_LEC} et et \emph{L\_ECR} afin de respectivement écouter et parler à la couche liaison.
+
+        \subsection{S\_LEC} % (fold)
+        \label{sub:slec}
+            Ce fichier contient les différentes requêtes faites par la couche session. Chaque ligne correspond à une requête d'envoie de données
+            différente. Le formatage des requêtes se fait de la façon suivante:
+            \begin{lstlisting}
+<numero_de_connexion>\<message_a_envoyer>
+            \end{lstlisting}
+        % subsection slec (end)
+        \subsection{S\_ECR} % (fold)
+        \label{sub:secr}
+            C'est le fichier dans lequel la couche transport écrit les notifications à transmettre à la couche session. Dans ce cas, le formattage
+            n'est pas particulier: une phrase écrite en français informant de ce qui se passe.
+        % subsection secr (end)
+        \subsection{L\_LEC} % (fold)
+        \label{sub:llec}
+            L'utilisation de ce fichier permet de simuler une réponse de la couche liaison. Les réponses générées par l'entité réseau (au nom
+            de la couche liaison) seront écrites dans ce fichier. Le format des lignes est le suivant:\\
+
+            Pour un paquet émis lors de
+            \begin{itemize}
+                \item La phase de connexion:
+\begin{lstlisting}
+<numero_de_connexion>/<type_paquet>/<adresse_source>/<adresse_destination>
+\end{lstlisting}
+                    
+                    \begin{itemize}
+                        \item Type de paquet: Il est tel que décrit dans l'énoncé du problème à la section 2.2 en annexe.
+                    \end{itemize}
+                \item La phase de transmission de données:
+\begin{lstlisting}
+<numero_de_connexion>/<type_de_paquet>/<segment_de_message>
+\end{lstlisting}
+                \item La phase de libération de connexion:
+\begin{lstlisting}
+<numero_de_connexion>/<type_paquet>/<adresse_source>/<adresse_destination>
+\end{lstlisting}
+            \end{itemize}
+        % subsection llec (end)
+        \subsection{L\_ECR} % (fold)
+        \label{sub:lecr}
+            Ce fichier sert à l'entité réseau. Il permet d'envoyer un message à la couche liaison afin que celle-ci fasse son travail à son tour (en
+            principe). Le format du fichier est le même qu'en {\color{blue} \ref{sub:llec}}.
+        % subsection lecr (end)
+    % section fich-audit (end)
     \newpage
     \section{ANNEXES} % (fold)
     \label{sec:ANNEXES}
